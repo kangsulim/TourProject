@@ -1,8 +1,8 @@
 import { Box, Container, Typography } from "@mui/material";
-import MapSearch from "../Tours/MapSearch";
-import WeatherForecast from "./WeatherForecast";
+import MapSearch from "../Maps/MapSearch";
+import WeatherForecast from "../Weathers/WeatherForecast";
 import Detail from "./detail";
-import Plan from "./plan";
+import Plan from "../Schedules/plan";
 
 export default function Tour() {
   return (
