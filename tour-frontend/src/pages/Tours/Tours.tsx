@@ -1,5 +1,5 @@
 import { Box, Container, Typography } from "@mui/material";
-import MapSearch from "../Maps/MapSearch";
+import IntegratedTravelPlanner from "../../components/IntegratedTravelPlanner";
 import WeatherForecast from "../Weathers/WeatherForecast";
 import Detail from "./detail";
 import Plan from "../Schedules/plan";
@@ -19,7 +19,7 @@ export default function Tour() {
     }}> 
       {/* 헤더 섹션 */}
       <Container sx={{
-        maxWidth: "1000px",
+        maxWidth: "1200px",
         width: "100%",
         display: "flex",
         flexDirection: "column",
@@ -43,13 +43,13 @@ export default function Tour() {
       
       {/* 메인 컨텐츠 영역 */}
       <Box sx={{
-        maxWidth: "1000px",
+        maxWidth: "1200px",
         width: "100%",
         display: "flex",
         flexDirection: "column",
         gap: 4,
       }}>
-        {/* 지도 및 일정 관리 섹션 */}
+        {/* 통합 여행 계획 섹션 */}
         <Box sx={{
           backgroundColor: "#fff",
           borderRadius: "10px",
@@ -58,22 +58,19 @@ export default function Tour() {
           display: "flex",
           flexDirection: "column",
         }}>
-          {/* 지도 섹션 */}
-          <Box sx={{
-            padding: 3,
-            borderBottom: "1px solid #e0e0e0",
-          }}>
-            <MapSearch />
-          </Box>
-          
-          {/* 일정 관리 섹션 */}
-          <Box sx={{
-            padding: 3,
-            minHeight: "400px", // 최소 높이 설정
-            flex: 1,
-          }}>
-            <Plan />
-          </Box>
+          <IntegratedTravelPlanner />
+        </Box>
+        
+        {/* 일정 관리 섹션 */}
+        <Box sx={{
+          backgroundColor: "#fff",
+          borderRadius: "10px",
+          boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+          padding: 3,
+          minHeight: "400px", // 최소 높이 설정
+          flex: 1,
+        }}>
+          <Plan />
         </Box>
         
         {/* 상세 정보 및 날씨 섹션 */}

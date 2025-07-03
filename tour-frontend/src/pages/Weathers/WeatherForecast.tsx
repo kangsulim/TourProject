@@ -9,20 +9,29 @@ import {
   Alert
 } from '@mui/material';
 import { useLocation } from '../../context/LocationContext';
+import { useTravel } from '../../context/TravelContext';
 import { fetchWeatherForecast } from '../../services/weatherApi';
 import { DailyWeather } from '../../types/weatherTypes';
 
 const WeatherForecast: React.FC = () => {
   const { locationData } = useLocation();
+  const { selectedPlaces, routeData } = useTravel();
+  
+  // 현재 표시할 위치 결정 (routeData의 출발지 우선, 없으면 마지막 선택된 장소, 없으면 locationData)
+  const currentLocation = routeData?.origin || selectedPlaces[selectedPlaces.length - 1] || locationData;
+  
   const [weatherData, setWeatherData] = useState<DailyWeather[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (locationData) {
-      loadWeatherData(locationData.lat, locationData.lng);
+    if (currentLocation) {
+      loadWeatherData(currentLocation.lat, currentLocation.lng);
+    } else {
+      setWeatherData([]);
+      setError(null);
     }
-  }, [locationData]);
+  }, [currentLocation]);
 
   const loadWeatherData = async (lat: number, lng: number) => {
     setLoading(true);
@@ -77,11 +86,14 @@ const WeatherForecast: React.FC = () => {
     return weatherEmojis[weatherMain] || '🌤️';
   };
 
-  if (!locationData) {
+  if (!currentLocation) {
     return (
       <Box sx={{ textAlign: 'center', py: 4 }}>
         <Typography variant="h6" color="text.secondary">
-          지도에서 위치를 선택하면 날씨 정보를 확인할 수 있습니다
+          🌤️ 날씨 예보
+        </Typography>
+        <Typography variant="body1" color="textSecondary" align="center">
+          지도에서 위치를 선택하거나 여행지를 추가하면 해당 지역의 날씨 정보를 확인할 수 있습니다.
         </Typography>
       </Box>
     );
@@ -108,8 +120,15 @@ const WeatherForecast: React.FC = () => {
 
   return (
     <Box sx={{ width: '100%' }}>
-      <Typography variant="h5" sx={{ mb: 3, fontWeight: 'bold' }}>
-        🌤️ {locationData.placeName || '선택한 위치'}의 5일 날씨 예보
+      <Typography variant="h5" sx={{ mb: 1, fontWeight: 'bold' }}>
+        🌤️ {currentLocation.placeName} 날씨 예보
+      </Typography>
+      
+      {/* 위치 정보 표시 */}
+      <Typography variant="caption" color="text.secondary" sx={{ mb: 2, display: 'block' }}>
+        📍 {currentLocation.placeAddress}
+        {routeData && ' (선택된 출발지)'}
+        {!routeData && selectedPlaces.length > 0 && ' (최근 선택된 여행지)'}
       </Typography>
       
       {/* 기존 Grid 사용 - md 값을 정수로 변경 */}

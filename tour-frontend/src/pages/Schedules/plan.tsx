@@ -26,6 +26,7 @@ import {
   PictureAsPdf 
 } from '@mui/icons-material';
 import { useLocation } from '../../context/LocationContext';
+import { useTravel } from '../../context/TravelContext';
 
 // 타입 정의
 interface Place {
@@ -54,6 +55,9 @@ interface NewPlaceForm {
 const Plan: React.FC = () => {
   // LocationContext에서 지도 데이터 가져오기
   const { locationData } = useLocation();
+  
+  // Travel Context에서 여행지 목록과 경로 데이터 가져오기
+  const { selectedPlaces, routeData, removePlace, clearPlaces } = useTravel();
 
   const [PlanData, setPlanData] = useState<PlanDay[]>([]);
 
@@ -258,17 +262,100 @@ const Plan: React.FC = () => {
       <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
         📅 일정 관리
       </Typography>
-      {PlanData.length > 0 && (
-        <Button 
-          variant="contained" 
-          startIcon={<Add />}
-          onClick={addPlaceFromMap}
-          sx={{ borderRadius: 2 }}
-        >
-          장소 추가
-        </Button>
-      )}
+      <Box sx={{ display: 'flex', gap: 1 }}>
+        {selectedPlaces.length > 0 && (
+          <Button 
+            variant="outlined" 
+            color="error"
+            startIcon={<Delete />}
+            onClick={clearPlaces}
+            size="small"
+          >
+            전체 삭제
+          </Button>
+        )}
+        {PlanData.length > 0 && (
+          <Button 
+            variant="contained" 
+            startIcon={<Add />}
+            onClick={addPlaceFromMap}
+            sx={{ borderRadius: 2 }}
+          >
+            장소 추가
+          </Button>
+        )}
+      </Box>
     </Box>
+
+    {/* 선택된 여행지 목록 */}
+    {selectedPlaces.length > 0 && (
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
+          🗺️ 선택된 여행지 ({selectedPlaces.length}개)
+        </Typography>
+        <Box sx={{ 
+          display: 'flex', 
+          flexWrap: 'wrap', 
+          gap: 1,
+          p: 2,
+          bgcolor: 'grey.50',
+          borderRadius: 2,
+          border: '1px solid',
+          borderColor: 'grey.200'
+        }}>
+          {selectedPlaces.map((place, index) => (
+            <Chip
+              key={`${place.lat}-${place.lng}-${index}`}
+              label={place.placeName}
+              onDelete={() => removePlace(index)}
+              color="primary"
+              variant="outlined"
+              sx={{ maxWidth: 200 }}
+            />
+          ))}
+        </Box>
+      </Box>
+    )}
+
+    {/* 선택된 교통 경로 정보 */}
+    {routeData && (
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
+          🚇 계획된 교통편
+        </Typography>
+        <Card sx={{ bgcolor: 'success.50', border: '1px solid', borderColor: 'success.200' }}>
+          <CardContent>
+            <Typography variant="subtitle1" sx={{ mb: 1 }}>
+              <strong>{routeData.origin.placeName}</strong> → <strong>{routeData.destination.placeName}</strong>
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+              <Chip 
+                label={`${routeData.selectedRoute?.totalDuration}분`} 
+                color="primary" 
+                size="small" 
+              />
+              <Chip 
+                label={`${routeData.selectedRoute?.totalPrice.toLocaleString()}원`} 
+                color="success" 
+                size="small" 
+              />
+            </Box>
+            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+              {routeData.selectedRoute?.steps.map((step, index) => (
+                <Chip
+                  key={index}
+                  label={`${step.transitDetails?.transitLine.vehicle?.type === 'BUS' ? '🚌' :
+                           step.transitDetails?.transitLine.vehicle?.type === 'SUBWAY' ? '🚇' :
+                           step.transitDetails?.transitLine.vehicle?.type === 'TRAIN' ? '🚄' : '🚊'} ${step.transitDetails?.transitLine.name}`}
+                  size="small"
+                  variant="outlined"
+                />
+              ))}
+            </Box>
+          </CardContent>
+        </Card>
+      </Box>
+    )}
 
     {/* 날짜 탭 */}
     {PlanData.length > 0 && (
