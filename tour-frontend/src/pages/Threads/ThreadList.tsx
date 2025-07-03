@@ -39,7 +39,7 @@ const ThreadList = () => {
   // 현재 페이지 번호 상태 저장 (초기값: 1페이지)
   const [currentPage, setCurrentPage] = useState(1);
    // 한 페이지당 게시글 개수
-   const threadsPerPage = 20;
+  const threadsPerPage = 20;
 
   // 로그인한 사용자 정보(context에서 가져옴)
   const { user } = useContext(AuthContext);

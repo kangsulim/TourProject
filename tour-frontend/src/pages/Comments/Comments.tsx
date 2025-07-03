@@ -1,90 +1,78 @@
 import React, { useEffect, useState, useContext } from 'react';
+import {
+  Box,
+  Typography,
+  Button,
+  TextField,
+  Paper,
+  Stack,
+  Divider
+} from '@mui/material';
 import { getComments, postComment, updateComment, deleteComment } from '../../services/commentApi';
 import { Comment, CommentRequest } from '../../types/comment';
-import styles from './Comments.module.css';
 import { AuthContext } from '../../context/AuthContext';
 
-// 대부분 다 수정했으니 전체를 봐주세요 7/2
-
-interface CommentsProps { // 컴포넌트 Props 타입 - 어느 게시글(thread)의 댓글인지 구분하는 ID
-  threadId: number;   // 댓글을 가져올 게시글(스레드) ID
+interface CommentsProps {
+  threadId: number;
 }
 
 const Comments: React.FC<CommentsProps> = ({ threadId }) => {
-  const [comments, setComments] = useState<Comment[]>([]); // 댓글 목록 상태 (Comment 배열)
-  const [newComment, setNewComment] = useState('');  // 새 댓글 작성용 텍스트 상태
-  const [editingCommentId, setEditingCommentId] = useState<number | null>(null);  // 현재 수정 중인 댓글 ID (없으면 null)
-  const [replyingTo, setReplyingTo] = useState<number | null>(null); // 대댓글 작성 중인 부모 댓글 ID 7/2
-  const [replyContent, setReplyContent] = useState(''); // 대댓글 내용
-  const [editingContent, setEditingContent] = useState(''); // 댓글 수정 텍스트 상태
-  const { user } = useContext(AuthContext); // 로그인 사용자 정보 (AuthContext에서 가져옴)
-  const isLoggedIn = !!user; // 로그인 여부 확인
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [newComment, setNewComment] = useState('');
+  const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
+  const [replyingTo, setReplyingTo] = useState<number | null>(null);
+  const [replyContent, setReplyContent] = useState('');
+  const [editingContent, setEditingContent] = useState('');
+  const { user } = useContext(AuthContext);
+  const isLoggedIn = !!user;
 
-  // 댓글 목록 불러오기 함수 - useCallback으로 감싸서 의존성(threadId)이 변할 때만 재생성
   const fetchComments = React.useCallback(async () => {
     try {
-      // API 호출해서 댓글 데이터 받아오기
       const data = await getComments(threadId);
-       // 받아온 댓글 데이터를 상태에 저장
       setComments(data);
     } catch (error) {
       console.error('댓글 불러오기 실패:', error);
     }
   }, [threadId]);
-   // 컴포넌트가 처음 렌더링될 때와 threadId가 바뀔 때 댓글 목록 다시 불러오기
+
   useEffect(() => {
     fetchComments();
   }, [fetchComments]);
 
-  // 새 댓글 작성 폼 제출 시 호출되는 함수
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-     // 빈 댓글은 등록하지 않음
     if (!newComment.trim()) return;
- // 댓글 작성 요청용 객체 생성
-    const requestData: CommentRequest = { //7/2 댓글
+
+    const requestData: CommentRequest = {
       comment: newComment.trim(),
       threadId,
-      author: user?.username || 'anonymous', // 로그인 안 됐으면 anonymous
+      author: user?.username || 'anonymous',
     };
 
     try {
-       // API 호출해서 댓글 서버에 등록
-      const newData = await postComment(requestData);
-       // 등록된 댓글을 상태에 추가 (기존 댓글 유지하고 새 댓글 추가)
-      setComments((prev) => [...prev, newData]);
-       // 입력창 초기화
+      await postComment(requestData);
+      await fetchComments();
       setNewComment('');
     } catch (error) {
       console.error('댓글 등록 실패:', error);
-      alert('댓글 등록에 실패했습니다. 로그인 상태를 확인해주세요.');
+      alert('댓글 등록에 실패했습니다.');
     }
   };
-    // 대댓글 작성 제출 시 호출되는 함수
-   const handleReplySubmit = async (parentId: number, e: React.FormEvent) => {
+
+  const handleReplySubmit = async (parentId: number, e: React.FormEvent) => {
     e.preventDefault();
-     // 빈 대댓글 등록 방지
     if (!replyContent.trim()) return;
- // 대댓글 작성 요청 데이터 (부모 댓글 ID 포함)
+
     const requestData: CommentRequest = {
       comment: replyContent.trim(),
       threadId,
       author: user?.username || 'anonymous',
-      parentId, // 이 값이 있으면 서버에서 대댓글로 처리
+      parentId,
     };
 
     try {
-       // API 호출해서 대댓글 등록
-      const newReply = await postComment(requestData);
-      // 부모 댓글의 comments 배열에 대댓글 추가
-      setComments((prevComments) =>
-        prevComments.map((c) =>
-          c.commentId === parentId
-            ? { ...c, comments: [...(c.comments || []), newReply] }
-            : c
-        )
-      );
-       // 대댓글 입력창 초기화 및 대댓글 작성 모드 종료
+      await postComment(requestData);
+      await fetchComments();
       setReplyContent('');
       setReplyingTo(null);
     } catch (error) {
@@ -93,30 +81,29 @@ const Comments: React.FC<CommentsProps> = ({ threadId }) => {
     }
   };
 
-  // 댓글 수정 시작수정할 댓글 ID와 현재 댓글 내용 전달)
   const handleEdit = (commentId: number, currentContent: string) => {
     setEditingCommentId(commentId);
     setEditingContent(currentContent);
   };
 
-  // 댓글 수정 취소(수정 모드 종료 및 입력창 초기화)
   const handleCancelEdit = () => {
     setEditingCommentId(null);
     setEditingContent('');
   };
 
-  // 댓글 수정 저장  (수정한 내용을 서버에 반영)
   const handleSaveEdit = async (commentId: number) => {
     if (!editingContent.trim()) {
       alert('댓글 내용을 입력하세요.');
       return;
     }
+
     try {
-      // API 호출해서 댓글 수정 요청
-      await updateComment(commentId, { comment: editingContent.trim(), threadId, author: user?.username || 'anonymous', }); 
-       // 댓글 목록 다시 불러오기
+      await updateComment(commentId, {
+        comment: editingContent.trim(),
+        threadId,
+        author: user?.username || 'anonymous',
+      });
       await fetchComments();
-        // 수정 모드 종료
       setEditingCommentId(null);
       setEditingContent('');
     } catch (error) {
@@ -125,15 +112,12 @@ const Comments: React.FC<CommentsProps> = ({ threadId }) => {
     }
   };
 
-  // 댓글 삭제(삭제 확인 창 띄우고, 서버 삭제 후 목록 갱신)
   const handleDelete = async (commentId: number) => {
     const confirmed = window.confirm('이 댓글을 삭제하시겠습니까?');
     if (!confirmed) return;
 
     try {
-      // API 호출해서 댓글 삭제
       await deleteComment(commentId);
-       // 삭제 후 댓글 목록 다시 불러오기
       await fetchComments();
     } catch (error) {
       console.error('댓글 삭제 실패:', error);
@@ -141,130 +125,179 @@ const Comments: React.FC<CommentsProps> = ({ threadId }) => {
     }
   };
 
-   //  // 댓글과 대댓글을 재귀적으로 렌더링하는 함수
-   const renderComments = (commentList: Comment[]) => {
+  const renderComments = (commentList: Comment[], isChild = false) => {
     return commentList.map((comment) => (
-      <li key={comment.commentId} className={styles.commentItem}>
-         {/* 댓글 작성자와 작성일 표시 */}
-        <div className={styles.commentHeader}>
-          <span className={styles.author}>{comment.author}</span>
-          <span className={styles.date}>{new Date(comment.createDate).toLocaleString()}</span>
-        </div>
-  {/* 현재 이 댓글이 수정 중인 댓글이면 수정용 textarea와 저장/취소 버튼 표시 */}
+      <Paper
+  key={comment.commentId}
+  elevation={isChild ? 1 : 2} // ✅ 대댓글은 그림자 얕게
+  sx={{
+    p: 2,
+    mb: 2,
+    borderRadius: 2,
+    backgroundColor: isChild ? '#f9f9f9' : '#fff', // ✅ 대댓글 배경 연하게
+    borderLeft: isChild ? '3px solid #1976d2' : 'none', // ✅ 계층 라인 추가
+    ml: isChild ? 2 : 0, // ✅ 대댓글 들여쓰기
+  }}
+>
+        <Stack direction="row" justifyContent="space-between" mb={1}>
+          <Typography variant="subtitle2" color="primary">
+            {comment.author}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            {new Date(comment.createDate).toLocaleString()}
+          </Typography>
+        </Stack>
+
         {editingCommentId === comment.commentId ? (
-          <>
-            <textarea
-              className={styles.editTextarea}
+          <Box
+            component="form"
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSaveEdit(comment.commentId);
+            }}
+          >
+            <TextField
+              fullWidth
+              multiline
+              minRows={2}
               value={editingContent}
               onChange={(e) => setEditingContent(e.target.value)}
+              placeholder="수정할 내용을 입력하세요"
+              sx={{ mb: 1 }}
             />
-            <div className={styles.actions}>
-              <button onClick={() => handleSaveEdit(comment.commentId)} className={styles.saveBtn}>
+            <Stack direction="row" spacing={1}>
+              <Button variant="contained" color="primary" type="submit">
                 저장
-              </button>
-              <button onClick={handleCancelEdit} className={styles.cancelBtn}>
+              </Button>
+              <Button
+                variant="outlined"
+                color="secondary"
+                onClick={handleCancelEdit}
+              >
                 취소
-              </button>
-            </div>
-          </>
+              </Button>
+            </Stack>
+          </Box>
         ) : (
           <>
-           {/* 수정 중이 아니면 댓글 내용과 수정/삭제/답글 버튼 표시 */}
-            <p className={styles.content}>{comment.comment}</p>
-
-            <div className={styles.actions}>
-              {/* 로그인한 사용자에게만 답글 버튼 보임 */}
-              {isLoggedIn && (
-                <button
-                  onClick={() => setReplyingTo(comment.commentId)}  // 대댓글 작성 폼 열기
-                  className={styles.replyBtn}
+            <Typography
+              variant="body1"
+              sx={{ mb: 1, whiteSpace: 'pre-line' }} // ✅ 줄바꿈 유지
+            >
+              {comment.comment}
+            </Typography>
+            <Stack direction="row" spacing={1}>
+              {isLoggedIn && !isChild && (
+                <Button
+                  size="small"
+                  variant="text"
+                  color="primary"
+                  onClick={() => setReplyingTo(comment.commentId)}
                 >
                   답글
-                </button>
+                </Button>
               )}
-               {/* 댓글 작성자 본인에게만 수정/삭제 버튼 노출 */}
               {user?.username === comment.author && (
                 <>
-                  <button
-                    onClick={() => handleEdit(comment.commentId, comment.comment)}
-                    className={styles.editBtn}
+                  <Button
+                    size="small"
+                    variant="text"
+                    onClick={() =>
+                      handleEdit(comment.commentId, comment.comment)
+                    }
                   >
                     수정
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    size="small"
+                    variant="text"
+                    color="error"
                     onClick={() => handleDelete(comment.commentId)}
-                    className={styles.deleteBtn}
                   >
                     삭제
-                  </button>
+                  </Button>
                 </>
               )}
-            </div>
+            </Stack>
           </>
         )}
 
-        {/* 대댓글 작성 폼 (현재 댓글에 답글 작성 중일 때만 노출) */}
         {replyingTo === comment.commentId && (
-          <form
+          <Box
+            component="form"
             onSubmit={(e) => handleReplySubmit(comment.commentId, e)}
-            className={styles.replyForm}
+            mt={1}
           >
-            <textarea
+            <TextField
+              fullWidth
+              multiline
+              minRows={2}
               value={replyContent}
               onChange={(e) => setReplyContent(e.target.value)}
               placeholder="답글을 입력하세요"
-              className={styles.textarea}
+              sx={{ mb: 1 }}
             />
-            <button type="submit" className={styles.submitButton}>
-              답글 등록
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setReplyingTo(null);
-                setReplyContent('');
-              }}
-              className={styles.cancelBtn}
-            >
-              취소
-            </button>
-          </form>
+            <Stack direction="row" spacing={1}>
+              <Button type="submit" variant="contained" color="primary">
+                답글 등록
+              </Button>
+              <Button
+                type="button"
+                variant="outlined"
+                color="secondary"
+                onClick={() => {
+                  setReplyingTo(null);
+                  setReplyContent('');
+                }}
+              >
+                취소
+              </Button>
+            </Stack>
+          </Box>
         )}
 
-        {/* 자식 댓글 (대댓글) 재귀 렌더링 */}
         {comment.comments && comment.comments.length > 0 && (
-          <ul className={styles.childCommentList}>
-            {renderComments(comment.comments)}
-          </ul>
+          <Box sx={{ pl: 3, mt: 2 }}>
+            <Divider sx={{ mb: 2 }} />
+            {renderComments(comment.comments, true)}
+          </Box>
         )}
-      </li>
+      </Paper>
     ));
   };
- // 컴포넌트 최종 렌더링 부분
+
   return (
-    <div className={styles.commentSection}>
-       {/* 댓글 총 개수 표시 */}
-      <h3>댓글 ({comments.length})</h3>
-      {/* 댓글 리스트 렌더링 */}
-      <ul className={styles.commentList}>{renderComments(comments)}</ul>
-     {/* 로그인 상태면 댓글 작성 폼 노출 */}
+    <Box sx={{ mt: 4 }}>
+      <Typography variant="h6" sx={{ mb: 2 }}>
+        댓글 ({comments.length})
+      </Typography>
+
+      <Box>{renderComments(comments)}</Box>
+
       {isLoggedIn ? (
-        <form onSubmit={handleSubmit} className={styles.commentForm}>
-          <textarea
+        <Box
+          component="form"
+          onSubmit={handleSubmit}
+        >
+          <TextField
+            fullWidth
+            multiline
+            minRows={3}
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
             placeholder="댓글을 입력하세요"
-            className={styles.textarea}
+            sx={{ mb: 2 }}
           />
-          <button type="submit" className={styles.submitButton}>
+          <Button type="submit" variant="contained" color="primary">
             댓글 작성
-          </button>
-        </form>
+          </Button>
+        </Box>
       ) : (
-         // 비로그인 시 로그인 안내 문구 노출
-        <p className={styles.loginNotice}>로그인 후 댓글을 작성할 수 있습니다.</p>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+          로그인 후 댓글을 작성할 수 있습니다.
+        </Typography>
       )}
-    </div>
+    </Box>
   );
 };
 
