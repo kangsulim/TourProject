@@ -1,35 +1,66 @@
-import { TrafficData } from '../types/traffic';
+import api, { ApiResponse } from './api';
+import { TrafficType } from '../types/types/travel';
 
-export class TrafficApiService {
-  private baseUrl: string;
+// Traffic API 서비스
+export const trafficAPI = {
+  // 모든 교통편 조회
+  getAllTraffic: async (): Promise<TrafficType[]> => {
+    const response = await api.get<ApiResponse<TrafficType[]>>('/traffic');
+    return response.data.data;
+  },
 
-  constructor(baseUrl: string) {
-    this.baseUrl = baseUrl;
-  }
+  // 특정 교통편 조회
+  getTrafficById: async (trafficId: number): Promise<TrafficType> => {
+    const response = await api.get<ApiResponse<TrafficType>>(`/traffic/${trafficId}`);
+    return response.data.data;
+  },
 
-  async saveTrafficData(trafficData: Omit<TrafficData, 'trafficId'>): Promise<TrafficData> {
-    const response = await fetch(`${this.baseUrl}/traffic`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(trafficData),
+  // 여행별 교통편 목록 조회
+  getTrafficByTourId: async (tourId: number): Promise<TrafficType[]> => {
+    const response = await api.get<ApiResponse<TrafficType[]>>(`/traffic/tour/${tourId}`);
+    return response.data.data;
+  },
+
+  // 새 교통편 생성
+  createTraffic: async (trafficData: Omit<TrafficType, 'trafficId'>): Promise<TrafficType> => {
+    const response = await api.post<ApiResponse<TrafficType>>('/traffic', trafficData);
+    return response.data.data;
+  },
+
+  // 교통편 정보 수정
+  updateTraffic: async (trafficId: number, trafficData: Partial<TrafficType>): Promise<TrafficType> => {
+    const response = await api.put<ApiResponse<TrafficType>>(`/traffic/${trafficId}`, trafficData);
+    return response.data.data;
+  },
+
+  // 교통편 삭제
+  deleteTraffic: async (trafficId: number): Promise<void> => {
+    await api.delete(`/traffic/${trafficId}`);
+  },
+
+  // 여러 교통편 일괄 생성
+  createMultipleTraffic: async (trafficDataList: Omit<TrafficType, 'trafficId'>[]): Promise<TrafficType[]> => {
+    const response = await api.post<ApiResponse<TrafficType[]>>('/traffic/bulk', trafficDataList);
+    return response.data.data;
+  },
+
+  // 여행의 모든 교통편 삭제
+  deleteTrafficByTourId: async (tourId: number): Promise<void> => {
+    await api.delete(`/traffic/tour/${tourId}`);
+  },
+
+  // 교통편 검색 (출발지, 도착지 기반)
+  searchTraffic: async (searchParams: {
+    departure: string;
+    destination: string;
+    departureTime?: string;
+    tourId: number;
+  }): Promise<TrafficType[]> => {
+    const response = await api.get<ApiResponse<TrafficType[]>>('/traffic/search', {
+      params: searchParams
     });
-
-    if (!response.ok) {
-      throw new Error(`Failed to save traffic data: ${response.statusText}`);
-    }
-
-    return response.json();
+    return response.data.data;
   }
+};
 
-  async getTrafficDataByTourId(tourId: bigint): Promise<TrafficData[]> {
-    const response = await fetch(`${this.baseUrl}/traffic/tour/${tourId}`);
-    
-    if (!response.ok) {
-      throw new Error(`Failed to fetch traffic data: ${response.statusText}`);
-    }
-
-    return response.json();
-  }
-}
+export default trafficAPI;

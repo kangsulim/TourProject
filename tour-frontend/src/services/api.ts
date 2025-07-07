@@ -12,4 +12,22 @@ api.interceptors.request.use(config => {
   return config;
 });
 
+// 공통 API 응답 타입 (새로 추가된 부분)
+export interface ApiResponse<T> {
+  data: T;
+  message?: string;
+  status: number;
+}
+
+// 페이지네이션 타입 (새로 추가된 부분)
+export interface PaginatedResponse<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+  first: boolean;
+  last: boolean;
+}
+
 export default api;

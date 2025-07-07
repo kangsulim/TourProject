@@ -1,5 +1,9 @@
-function Maps() {
-  return <div>Maps 페이지입니다</div>;
-}
+
+const Maps: React.FC = () => {
+
+  return (
+    <></>
+  );
+};
 
 export default Maps;
