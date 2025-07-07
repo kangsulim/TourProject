@@ -90,8 +90,8 @@ public class ThreadController {
     // 게시물에 현재 좋아요 누른 사용자 호출 7/1
     @GetMapping("/{id}/like-status")
     public ResponseEntity<ThreadDto> getThreadWithLikeStatus( // 메서드 이름 중복이어서 이름만 바꿈 7/2
-            @PathVariable Long id,
-            @RequestParam Long userId
+                                                              @PathVariable Long id,
+                                                              @RequestParam Long userId
     ) {
         ThreadDto dto = threadService.getThreadById(id, userId);
         return ResponseEntity.ok(dto);

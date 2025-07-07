@@ -1,6 +1,6 @@
 // axios 인스턴스를 불러옴. baseURL 설정되어 있음 (예: http://localhost:8080)
 import api from './api';
-import {  UserUpdateRequest, LoginRequest, SignupRequest, UserResponse, JwtResponse } from '../types/user';
+import {  UserUpdateRequest, LoginRequest, SignupRequest, UserResponse, JwtResponse, User } from '../types/user';
 // .d.ts는 타입만 정의하는 파일임을 나타내는 확장자.여기 user는 파일명에서 .d.ts 확장자를 빼고 쓴거
 
 
@@ -48,4 +48,10 @@ export const updateUserProfile = async (
 export const getUserIdByUsername = async (username: string): Promise<number> => {
   const response = await api.get(`/users/username/${username}`);
   return response.data;  // userId 반환
+};
+
+/** 모든 게시글 목록 조회 */
+export const getUserss = async (): Promise<User[]> => {
+  const response = await api.get('/users');
+  return response.data;
 };

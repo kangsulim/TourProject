@@ -15,6 +15,7 @@ import ThreadCreate from './pages/Threads/ThreadCreate';
 import ThreadDetail from './pages/Threads/ThreadDetail';
 import MyPage from "./pages/Mypage/Mypage";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import Adminpage from "./pages/adminpage/Adminpage";
 
 // Material-UI 테마 생성
 const theme = createTheme({
@@ -105,9 +106,13 @@ export default function App() {
                       <MyPage />
                     </ProtectedRoute>
                   } />
+                  <Route path="/adminpage" element={
+                  <ProtectedRoute>
+                    <Adminpage />
+                  </ProtectedRoute>
+                } />
                 </Routes>
               </main>
-              
               {/* Footer - 항상 하단에 위치 */}
               <Footer />
               </AuthProvider>
