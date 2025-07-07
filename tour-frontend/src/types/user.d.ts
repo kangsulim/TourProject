@@ -40,3 +40,14 @@ export interface UserUpdateRequest {
   phone?: string;
   nickname?: string;
 }
+
+export type Role = 'USER' | 'ADMIN';
+
+interface User {
+  userId: number;           // 고유 ID
+  username: string;     // 아이디..
+  name: string;         // 유저 이름
+  email: string;        // 이메일
+  role: string;         // 사용자 권한 (ADMIN/USER)
+  createDate: string;   // 가입일
+}

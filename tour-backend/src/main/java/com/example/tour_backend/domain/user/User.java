@@ -1,5 +1,6 @@
 package com.example.tour_backend.domain.user;
 
+import com.example.tour_backend.domain.Role;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -48,6 +49,12 @@ public class User {
     @UpdateTimestamp
     private LocalDateTime modifiedDate;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role;
+
+
+
     @Builder
     public User(String password, String name, String email, String phone, String nickname,
                 LocalDateTime createDate, LocalDateTime modifiedDate /*List<Tour> tours, List<Thread> threads*/) {
@@ -58,6 +65,7 @@ public class User {
         this.nickname = nickname;
         this.createDate = createDate;
         this.modifiedDate = modifiedDate;
+        this.role = Role.USER; // 기본값 USER
 //        this.tours = tours;
 //        this.threads = threads;
     }

@@ -2,6 +2,7 @@ package com.example.tour_backend.service;
 
 
 import com.example.tour_backend.config.JwtTokenProvider;
+import com.example.tour_backend.domain.Role;
 import com.example.tour_backend.domain.user.User;
 import com.example.tour_backend.domain.user.UserRepository;
 import com.example.tour_backend.dto.user.*;
@@ -64,7 +65,10 @@ public class UserService {
                 .phone(requestDto.getPhone())
                 .nickname(requestDto.getNickname())
                 .build();
+
+        user.setRole(Role.USER);
         userRepository.save(user);
+
 
 
         // 응답 DTO 생성 및 반환
