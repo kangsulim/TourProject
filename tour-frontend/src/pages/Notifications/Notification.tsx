@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { Box, Typography, Modal, Button, Container, IconButton, Badge } from '@mui/material';
 import NotificationsIcon from '@mui/icons-material/Notifications';
-import { fetchNotifications, deleteNotifications } from '../../services/notificationApi';
+import { fetchNotifications, markAsRead } from '../../services/notificationApi';
 import { Notification } from '../../types/notification';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
@@ -14,7 +14,7 @@ const NotificationPopup: React.FC = () => {
    // 서버에서 받아온 알림 목록 상태
   const [notifications, setNotifications] = useState<Notification[]>([]);
    // 사용자가 '삭제 선택' 버튼으로 선택한 알림 ID 목록 상태
-  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  //const [selectedIds, setSelectedIds] = useState<number[]>([]);
     // 읽지 않은 새로운 알림이 있는지 여부 상태 (종 아이콘 점멸 효과용)
   const [hasNew, setHasNew] = useState(false);
   // 초기값은 'unread' (읽지 않은 알림 탭)
@@ -31,35 +31,36 @@ const NotificationPopup: React.FC = () => {
  // 비동기 함수로 알림 API 호출 및 상태 업데이트
     const load = async () => {
       const data = await fetchNotifications(user.userId);// 로그인 유저 ID로 알림 요청
-      setNotifications(data); // 받아온 알림 목록 상태에 저장
-      setHasNew(data.some(n => !n.isRead)); // 읽지 않은 알림이 하나라도 있으면 true로 설정
+          //1주일 지난 알림 필터링
+          const oneWeekAgo = new Date();
+          oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    
+          const filtered = data.filter(n => new Date(n.createDate) >= oneWeekAgo);
+
+      setNotifications(filtered); // 받아온 알림 목록 상태에 저장
+      setHasNew(filtered.some(n => !n.isRead)); // 읽지 않은 알림이 하나라도 있으면 true로 설정
     };
     load();
   }, [open, user]); // open 또는 user가 바뀌면 다시 불러옴
+// 읽지 않은 알림만 또는 읽은 알림만 필터링해서 보여줌
+  const filteredNotifications = notifications.filter(n =>
+    tab === 'unread' ? !n.isRead : n.isRead
+  );
   
 
    // 알림 클릭 시 해당 게시글 상세 페이지로 이동하고 팝업 닫음
-  const handleClickThread = (threadId: number) => {
-    navigate(`/thread/${threadId}`); // 게시글 상세 페이지 URL로 이동
-    setOpen(false); // 팝업창 닫기
+   const handleClickThread = (threadId: number, noticeId: number) => {
+    
+      markAsRead(noticeId).catch(error => { 
+        console.error('알림 읽음 처리 실패:', error);
+      });      // 서버에 읽음 처리 요청
+      setNotifications(prev =>
+        prev.map(n => n.noticeId === noticeId ? { ...n, isRead: true } : n)
+      );
+      setTab('read'); 
+      navigate(`/thread/${threadId}`);
+      setOpen(false);
   };
- // '삭제 선택' 버튼 클릭 시 해당 알림 ID를 선택 또는 해제하는 함수
-  const toggleSelect = (id: number) => {
-    setSelectedIds(prev =>
-      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
-    );
-  };
-  // 선택된 알림들을 삭제 요청하고, 상태에서 삭제된 알림 제거
-  const handleDelete = async () => {
-    await deleteNotifications(selectedIds); // 서버에 선택된 알림 ID로 삭제 요청
-    setNotifications(prev => prev.filter(n => !selectedIds.includes(n.noticeId)));// 상태에서 삭제
-    setSelectedIds([]);// 선택 초기화
-  };
-
-   // 읽지 않은 알림만 또는 읽은 알림만 필터링해서 보여줌
-   const filteredNotifications = notifications.filter(n =>
-    tab === 'unread' ? !n.isRead : n.isRead
-  );
 
   return (
     <>
@@ -134,22 +135,22 @@ const NotificationPopup: React.FC = () => {
             <Typography variant="body2" color="text.secondary">
               {tab === 'unread' ? '읽지 않은 알림이 없습니다.' : '읽은 알림이 없습니다.'}
               </Typography>
-          )
-          : (
-            /* --- [수정된 부분] 알림 목록을 filteredNotifications로 교체 ---
+          ) : (
+            /* --- 알림 목록을 filteredNotifications로 교체 ---
                탭 상태에 따라 필터링 된 알림만 보여줌 */
             filteredNotifications.map(n => (
               <Box
                 key={n.noticeId}
-                onClick={() => handleClickThread(n.threadId)}
+                onClick={() => handleClickThread(n.threadId, n.noticeId)}
                 sx={{
                   p: 1,
                   mb: 1,
-                  bgcolor: selectedIds.includes(n.noticeId) ? '#f0f0f0' : '#fafafa',
+                  bgcolor: '#fafafa',
                   cursor: 'pointer',
                   borderRadius: 1,
-                  border: '1px solid #ddd',
-            )}>
+                  border: '1px solid #ddd'
+                }}
+                >
               {/* 알림 메시지 */}
               <Typography variant="body2">
                 💬 <strong>{n.message}</strong>
@@ -158,34 +159,17 @@ const NotificationPopup: React.FC = () => {
               <Typography variant="caption" color="text.secondary">
                 {new Date(n.createDate).toLocaleString()}
               </Typography>
-              {/* 삭제 선택 / 선택 취소 버튼 */}
-              <Button
-                size="small"
-                variant={selectedIds.includes(n.noticeId) ? 'contained' : 'outlined'}
-                onClick={e => {
-                  e.stopPropagation(); // 버튼 클릭 시 부모 onClick(게시글 이동) 막기
-                  toggleSelect(n.noticeId); // 선택 상태 토글
-                }}
-                sx={{ mt: 1 }}
-              >
-                {selectedIds.includes(n.noticeId) ? '선택 취소' : '삭제 선택'}
-              </Button>
+             
+             
             </Box>
-          ))}
+          )))}
         
-          {/* 하나 이상 선택되면 하단에 삭제 실행 버튼 표시 */}
-
-          {selectedIds.length > 0 && (
-            <Button variant="contained" color="error" fullWidth onClick={handleDelete}>
-              선택 삭제
-            </Button>
+         
             
-          )}
-          </>
-        )}
+        
         </Container>
       </Modal>
-    </>
+      </>
   );
 };
 
