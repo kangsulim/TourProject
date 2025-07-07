@@ -69,6 +69,7 @@ public class NotificationService {
                     dto.setUserId(n.getUser().getUserId());
                     dto.setThreadId(n.getThread().getThreadId());
                     dto.setCommentId(n.getComment().getCommentId());
+                    dto.setCommentId(n.getComment() != null ? n.getComment().getCommentId() : null); //7/3
                     dto.setMessage(n.getMessage());
                     dto.setRead(n.isRead());
                     dto.setCreateDate(n.getCreateDate());
@@ -76,4 +77,8 @@ public class NotificationService {
                 })
                 .collect(Collectors.toList());
     }
+    public void deleteNotificationsByIds(List<Long> ids) { //7/3
+        notificationRepository.deleteAllById(ids);
+    }
+
 }
