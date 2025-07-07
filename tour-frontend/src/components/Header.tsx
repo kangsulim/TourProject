@@ -2,31 +2,35 @@ import React, { useState, useContext } from "react";
 import { Link } from "react-router-dom";
 import { AuthModal } from "./Modal";
 import LogoutButton from "./LogoutButton";
-import AuthProvider from "../context/AuthContext";
+//import AuthProvider from "../context/AuthContext";
+import { AuthContext } from "../context/AuthContext"; 
+import NotificationPopup from "../pages/Notifications/Notification";
 
 export const Header: React.FC = () => {
-  const authContext = useContext(AuthProvider);
-
+  // 인증 정보 Context 가져오기
+  const authContext = useContext(AuthContext); //AuthProvider → AuthContext 바꿈
+  // 예외 처리: Context가 없을 경우
   if (!authContext) {
     throw new Error('Header must be used within an AuthProvider');
   }
 
-  const { isAuthenticated } = authContext;
+  const { isAuthenticated } = authContext; // 로그인 상태
+  // 로그인 & 회원가입 모달 상태 관리
   const [openLoginModal, setOpenLoginModal] = useState(false);
   const [openSignupModal, setOpenSignupModal] = useState(false);
-
+ // 로그인 모달 열기
   const handleOpenLoginModal = () => setOpenLoginModal(true);
   const handleCloseLoginModal = () => {
     setOpenLoginModal(false);
   };
-
+// 회원가입 모달 열기 (로그인 모달 닫고)
   const handleOpenSignupModal = () => {
     setOpenLoginModal(false);
     setOpenSignupModal(true);
   };
 
   const handleCloseSignupModal = () => setOpenSignupModal(false);
-
+ // 회원가입 모달에서 로그인으로 돌아가기
   const handleBackToLogin = () => {
     setOpenSignupModal(false);
     setOpenLoginModal(true);
@@ -34,6 +38,7 @@ export const Header: React.FC = () => {
 
   return (
     <>
+     {/*  상단 고정 Header 영역 */}
       <header
         style={{
           margin: "0",
@@ -51,18 +56,22 @@ export const Header: React.FC = () => {
           zIndex: 1000,
         }}
       >
+        {/*  왼쪽 로고 or 제목 */}
         <div style={{ fontSize: "24px", fontWeight: "bold" }}>🌍 어디로든 문</div>
-
+   {/* 🔹 네비게이션 메뉴 */}
         <nav style={{ display: "flex", gap: "32px", alignItems: "center" }}>
           <Link to="/" style={{ textDecoration: "none", color: "#333", fontSize: "1.1rem", fontWeight: "500" }}>홈</Link>
           <Link to="/plan" style={{ textDecoration: "none", color: "#333", fontSize: "1.1rem", fontWeight: "500" }}>여행 계획</Link>
           <Link to="/thread" style={{ textDecoration: "none", color: "#333", fontSize: "1.1rem", fontWeight: "500" }}>여행 게시판</Link>
           <Link to="/mypage" style={{ textDecoration: "none", color: "#333", fontSize: "1.1rem", fontWeight: "500" }}>마이페이지</Link>
         </nav>
-
+ {/*  로그인/로그아웃 버튼 영역 */}
         <div className="auth-buttons">
           {isAuthenticated ? ( // isAuthenticated로 접근
-            <LogoutButton />
+          <>
+            <LogoutButton /> 
+            <NotificationPopup /> {/*  로그인한 사용자에만 종 아이콘 표시 */}
+            </>
           ) : (
             <button
               style={{
@@ -83,7 +92,7 @@ export const Header: React.FC = () => {
           )}
         </div>
       </header>
-
+  {/*  로그인/회원가입 모달 */}
       <AuthModal
         openLogin={openLoginModal}
         openSignup={openSignupModal}

@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 public class CommentService {
     private final CommentRepository commentRepository; // 댓글 데이터베이스 접근용 리포지토리
     private final ThreadRepository threadRepository; // 게시글 데이터베이스 접근용 리포지토리
+    private final NotificationService notificationService; //7/3
 
     @Transactional
     public CommentDto addComment(CommentDto dto) {
@@ -40,6 +41,13 @@ public class CommentService {
         }
         // 3. 댓글 저장
         commentRepository.save(comment);
+        //  알림 생성 추가 7/3
+        notificationService.createNotification(
+                thread.getUser().getUserId(),           // 게시글 작성자
+                thread.getThreadId(),                   // 게시글 ID
+                comment.getCommentId(),                 // 댓글 ID
+                comment.getAuthor() + "님이 댓글을 남겼습니다."
+        );
         // 4. 저장 후 DB에서 생성된 댓글ID, 생성일, 수정일을 DTO에 세팅해 반환
         dto.setCommentId(comment.getCommentId());
         dto.setCreateDate(comment.getCreateDate());
