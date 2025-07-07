@@ -24,4 +24,10 @@ public class NotificationController {
         notificationService.deleteNotificationsByIds(ids);
         return ResponseEntity.noContent().build();
     }
+    // 알림 읽음 처리하는 메서드 7/7
+    @PatchMapping("/{noticeId}/read")
+    public ResponseEntity<Void> markAsRead(@PathVariable Long noticeId) {
+        notificationService.markAsRead(noticeId);
+        return ResponseEntity.noContent().build();
+    }
 }

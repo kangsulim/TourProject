@@ -1,5 +1,6 @@
 package com.example.tour_backend.dto.notification;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -11,6 +12,7 @@ public class NotificationDto {
     private Long threadId;
     private Long commentId;
     private String message;
+    @JsonProperty("isRead")
     private boolean isRead;
     private LocalDateTime createDate;
 }

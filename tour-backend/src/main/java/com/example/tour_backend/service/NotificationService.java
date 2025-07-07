@@ -77,8 +77,19 @@ public class NotificationService {
                 })
                 .collect(Collectors.toList());
     }
+    //알림 읽음 처리하는 메서드 7/7
     public void deleteNotificationsByIds(List<Long> ids) { //7/3
         notificationRepository.deleteAllById(ids);
+    }
+
+    @Transactional
+    public void markAsRead(Long noticeId) {
+        Notification notification = notificationRepository.findById(noticeId)
+                .orElseThrow(() -> new RuntimeException("알림이 존재하지 않습니다."));
+
+        if (!notification.isRead()) {
+            notification.setRead(true); // 필드 직접 수정
+        }
     }
 
 }
