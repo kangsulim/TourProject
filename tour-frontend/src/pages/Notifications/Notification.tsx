@@ -38,10 +38,16 @@ const NotificationPopup: React.FC = () => {
           const filtered = data.filter(n => new Date(n.createDate) >= oneWeekAgo);
 
       setNotifications(filtered); // 받아온 알림 목록 상태에 저장
-      setHasNew(filtered.some(n => !n.isRead)); // 읽지 않은 알림이 하나라도 있으면 true로 설정
+      //setHasNew(filtered.some(n => !n.isRead)); // 읽지 않은 알림이 하나라도 있으면 true로 설정
     };
     load();
   }, [open, user]); // open 또는 user가 바뀌면 다시 불러옴
+
+   // notifications가 바뀔 때마다 hasNew 상태를 최신화
+   useEffect(() => {
+    setHasNew(notifications.some(n => !n.isRead));
+  }, [notifications]);
+
 // 읽지 않은 알림만 또는 읽은 알림만 필터링해서 보여줌
   const filteredNotifications = notifications.filter(n =>
     tab === 'unread' ? !n.isRead : n.isRead
@@ -54,8 +60,20 @@ const NotificationPopup: React.FC = () => {
       markAsRead(noticeId).catch(error => { 
         console.error('알림 읽음 처리 실패:', error);
       });      // 서버에 읽음 처리 요청
-      setNotifications(prev =>
-        prev.map(n => n.noticeId === noticeId ? { ...n, isRead: true } : n)
+      setNotifications(prev => {
+        return prev.map(n => {
+          console.log('🔍 기존 알림:', n);
+          if (n.noticeId === noticeId) {
+            const updated = { ...n, isRead: true };
+            console.log('✅ 업데이트할 알림:', updated);
+            return updated;
+          }
+          return n;
+        });
+      });
+      console.log(
+        '변경 후 isRead 상태:',
+        notifications.map(n => ({ id: n.noticeId, isRead: n.isRead }))
       );
       setTab('read'); 
       navigate(`/thread/${threadId}`);

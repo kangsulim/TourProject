@@ -64,6 +64,7 @@ export const Header: React.FC = () => {
           <Link to="/plan" style={{ textDecoration: "none", color: "#333", fontSize: "1.1rem", fontWeight: "500" }}>여행 계획</Link>
           <Link to="/thread" style={{ textDecoration: "none", color: "#333", fontSize: "1.1rem", fontWeight: "500" }}>여행 게시판</Link>
           <Link to="/mypage" style={{ textDecoration: "none", color: "#333", fontSize: "1.1rem", fontWeight: "500" }}>마이페이지</Link>
+          <Link to="/adminpage" style={{ textDecoration: "none", color: "#333", fontSize: "1.1rem", fontWeight: "500" }}>관리자 페이지</Link>
         </nav>
  {/*  로그인/로그아웃 버튼 영역 */}
         <div className="auth-buttons">
