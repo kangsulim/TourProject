@@ -6,20 +6,34 @@ import {
   ScheduleType, 
   MapEntityType, 
   TrafficType 
-} from '../types/types/travel';
-import { GooglePlaceResult } from '../types/types/googleMaps';
+} from '../types/travel';
+import { GooglePlaceResult } from '../types/googleMaps';
 
 /**
  * Google Place Result를 LocationData로 변환
+ * Google Maps API에서 반환하는 실제 PlaceResult 타입을 처리
  */
-export const convertPlaceToLocationData = (place: GooglePlaceResult): LocationData => {
+export const convertPlaceToLocationData = (place: google.maps.places.PlaceResult): LocationData => {
+  // 좌표 처리 - Google API는 함수로 좌표를 반환
+  const lat = typeof place.geometry?.location?.lat === 'function' 
+    ? place.geometry.location.lat() 
+    : (place.geometry?.location as any)?.lat || 0;
+    
+  const lng = typeof place.geometry?.location?.lng === 'function'
+    ? place.geometry.location.lng()
+    : (place.geometry?.location as any)?.lng || 0;
+
   return {
     name: place.name || '',
     link: `https://maps.google.com/maps?place_id=${place.place_id}`,
     placeId: place.place_id || '',
     address: place.formatted_address || '',
-    photoUrl: place.photos?.[0]?.getUrl({ maxWidth: 400 }) || '',
-    rating: place.rating || 0,
+    coordinates: {
+      lat,
+      lng,
+    },
+    photoUrl: place.photos?.[0]?.getUrl({ maxWidth: 400 }) || undefined,
+    rating: place.rating || undefined,
   };
 };
 

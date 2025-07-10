@@ -471,6 +471,163 @@ export const Tours: React.FC = () => {
 
 ---
 
-**최종 업데이트**: 2025-07-07
-**개발 예상 기간**: 4-6주
+## 🎯 Phase 8: Schedules-Maps 인터랙션 기능 (고도화)
+
+### 개요
+Schedules 컴포넌트와 Maps 컴포넌트 간의 양방향 인터랙션을 구현하여 직관적이고 인터랙티브한 여행 계획 도구 완성
+
+### 8.1 여행지 일정 클릭 기능
+
+#### 핵심 기능
+- **지도 자동 이동**: 여행지 일정 클릭 시 해당 위치로 지도 중심 이동
+- **마커 하이라이트**: 선택된 여행지 마커를 특별한 스타일로 강조 표시
+- **정보 표시**: 검색 결과 패널 또는 InfoWindow에 해당 장소 정보 자동 표시
+
+#### 구현 방식
+```typescript
+// travelStore.ts 상태 확장
+interface TravelState {
+  highlightedLocation: LocationData | null;  // 강조할 여행지
+  mapViewMode: 'normal' | 'highlight' | 'route'; // 지도 표시 모드
+}
+
+// Schedules.tsx에서 클릭 이벤트
+const handleLocationClick = (schedule: ScheduleType) => {
+  const locationData = parseLocationData(mapEntity.location);
+  setHighlightedLocation(locationData);
+  setMapCenter(locationData.coordinates);
+};
+```
+
+#### 사용자 경험
+1. Schedules에서 "경복궁 관람" 일정 클릭
+2. Maps 지도가 경복궁 위치로 부드럽게 이동
+3. 경복궁 마커가 빨간색으로 변경되며 크기 확대
+4. 검색 결과 패널에 경복궁 상세 정보 표시
+
+### 8.2 교통편 일정 클릭 기능
+
+#### 핵심 기능
+- **경로 시각화**: Google Maps Polyline API를 사용한 실제 경로 표시
+- **출발지/도착지 마커**: 시작점과 끝점을 구분되는 마커로 표시
+- **경로 정보 표시**: 길찾기 패널에 해당 경로의 상세 정보 표시
+
+#### 구현 방식
+```typescript
+// 경로 표시 상태 추가
+interface TravelState {
+  displayedRoute: RouteResult | null;      // 표시할 경로
+  routePolyline: google.maps.Polyline | null; // 지도상 경로 선
+}
+
+// GoogleMapContainer.tsx 확장
+- Polyline 컴포넌트 추가
+- 경로별 색상 구분 (지하철: 파란색, 버스: 초록색)
+- 경로 애니메이션 효과
+```
+
+#### 사용자 경험
+1. Schedules에서 "홍대입구역 → 강남역" 교통편 클릭
+2. 지도에 지하철 경로가 파란색 선으로 표시
+3. 출발지(초록 마커), 도착지(빨간 마커) 표시
+4. 길찾기 패널에 환승 정보 및 소요시간 표시
+
+### 8.3 양방향 인터랙션
+
+#### Maps → Schedules 연동
+- **마커 클릭**: 지도 마커 클릭 시 해당 일정이 Schedules에서 강조 표시
+- **검색 후 추가**: Maps에서 새로 검색한 장소를 일정에 추가 시 즉시 Schedules 업데이트
+
+#### 상태 동기화
+```typescript
+// 양방향 통신을 위한 액션 추가
+setHighlightedSchedule: (scheduleId: number) => void;
+clearHighlights: () => void;
+syncMapWithSchedule: (schedule: ScheduleType) => void;
+```
+
+### 8.4 시각적 강화 요소
+
+#### 마커 스타일 시스템
+```typescript
+const MARKER_STYLES = {
+  default: { color: '#4285f4', size: 32 },
+  highlighted: { color: '#ea4335', size: 40, animation: 'bounce' },
+  routeStart: { color: '#34a853', size: 36, icon: 'start' },
+  routeEnd: { color: '#ea4335', size: 36, icon: 'end' }
+};
+```
+
+#### 경로 스타일 시스템
+```typescript
+const ROUTE_STYLES = {
+  subway: { color: '#4285f4', weight: 6, opacity: 0.8 },
+  bus: { color: '#34a853', weight: 5, opacity: 0.7 },
+  walking: { color: '#9aa0a6', weight: 3, opacity: 0.6, pattern: 'dashed' }
+};
+```
+
+### 8.5 구현 우선순위
+
+#### Phase 8.1 - 기본 인터랙션 (2-3시간)
+- [ ] 여행지 일정 클릭 → 지도 이동 기능
+- [ ] 마커 하이라이트 시스템 구현
+- [ ] 기본 상태 관리 확장
+
+#### Phase 8.2 - 경로 시각화 (3-4시간)
+- [ ] Google Maps Polyline API 연동
+- [ ] 교통편 클릭 → 경로 표시 기능
+- [ ] 경로 스타일 시스템 구현
+
+#### Phase 8.3 - 양방향 연동 (2-3시간)
+- [ ] Maps → Schedules 역방향 통신
+- [ ] 상태 동기화 완성
+- [ ] 하이라이트 해제 기능
+
+#### Phase 8.4 - UI/UX 최적화 (1-2시간)
+- [ ] 애니메이션 효과 추가
+- [ ] 색상 및 스타일 최적화
+- [ ] 반응형 디자인 적용
+
+### 8.6 기술적 고려사항
+
+#### 성능 최적화
+- **메모이제이션**: React.memo, useMemo를 사용한 불필요한 리렌더링 방지
+- **상태 관리**: 하이라이트 상태의 효율적 관리
+- **API 호출 최소화**: 이미 로드된 경로 정보 재사용
+
+#### 사용자 경험
+- **부드러운 전환**: 지도 이동 시 panTo() 사용으로 자연스러운 애니메이션
+- **시각적 피드백**: 클릭/호버 상태의 명확한 표시
+- **오류 처리**: 잘못된 좌표나 경로 정보에 대한 예외 처리
+
+#### 접근성
+- **키보드 내비게이션**: 마우스 없이도 일정 선택 가능
+- **스크린 리더**: 지도 상태 변화에 대한 음성 안내
+- **색상 대비**: 색맹 사용자를 위한 적절한 색상 선택
+
+### 8.7 예상 효과
+
+#### 사용자 경험 향상
+- **직관성**: 일정과 지도의 직접적 연결로 이해도 증가
+- **편의성**: 클릭 한 번으로 관련 정보 즉시 확인
+- **몰입감**: 인터랙티브한 경험으로 사용자 참여도 증가
+
+#### 기능적 완성도
+- **통합성**: Schedules와 Maps의 완전한 연동
+- **시각화**: 추상적인 일정을 구체적인 지도로 표현
+- **차별화**: 일반적인 일정 관리 도구를 넘어선 여행 계획 플랫폼
+
+### 8.8 확장 가능성
+
+#### 고급 기능 아이디어
+- **일정 순서 최적화**: 지리적 위치를 고려한 최적 경로 제안
+- **실시간 정보**: 교통 상황, 영업시간 등 실시간 데이터 연동
+- **AR 연동**: 모바일에서 증강현실을 통한 현장 안내
+- **소셜 기능**: 다른 사용자와 여행 계획 공유 및 추천
+
+---
+
+**최종 업데이트**: 2025-07-08
+**개발 예상 기간**: 4-6주 + Phase 8 (1-2주)
 **개발자**: Full-Stack Developer

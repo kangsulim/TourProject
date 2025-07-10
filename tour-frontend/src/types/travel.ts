@@ -19,18 +19,19 @@ export interface MapEntityType {
   mapId?: number;
   scheduleId: number;
   tourId: number;
-  location: string; // JSON 형태의 여행지 정보
-  googleMapLink: string; // 구글맵 링크
-  photoUrl?: string; // 구글 Places API에서 가져온 사진
-  rating?: number; // 구글 별점
+  location: string; // JSON 형태의 LocationData
 }
 
 // MapEntity.location 필드에 저장될 JSON 구조
 export interface LocationData {
   name: string;
-  link: string;
+  link: string; // Google Maps 공유 링크
   placeId: string;
   address: string;
+  coordinates: { // 지도 표시용 좌표
+    lat: number;
+    lng: number;
+  };
   photoUrl?: string;
   rating?: number;
 }
@@ -75,7 +76,7 @@ export interface RouteResult {
 }
 
 export interface RouteStep {
-  mode: 'BUS' | 'SUBWAY';
+  mode: 'BUS' | 'SUBWAY' | 'TRAIN' | 'TRAM' | 'HEAVY_RAIL' | 'COMMUTER_TRAIN' | 'HIGH_SPEED_TRAIN' | 'WALKING';
   line: string;
   departure: string;
   arrival: string;

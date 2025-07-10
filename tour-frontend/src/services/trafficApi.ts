@@ -1,5 +1,5 @@
 import api, { ApiResponse } from './api';
-import { TrafficType } from '../types/types/travel';
+import { TrafficType } from '../types/travel';
 
 // Traffic API 서비스
 export const trafficAPI = {

@@ -1,5 +1,5 @@
 import api, { ApiResponse } from './api';
-import { ScheduleType } from '../types/types/travel';
+import { ScheduleType } from '../types/travel';
 
 // Schedule API 서비스
 export const scheduleAPI = {

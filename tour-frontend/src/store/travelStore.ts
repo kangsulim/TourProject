@@ -9,8 +9,8 @@ import {
   RouteResult,
   LocationData,
   VehicleData
-} from '../../types/types/travel';
-import { GooglePlaceResult } from '../../types/types/googleMaps';
+} from '../types/travel';
+import { GooglePlaceResult } from '../types/googleMaps';
 
 interface TravelState {
   // 현재 여행 정보
@@ -44,10 +44,9 @@ interface TravelActions {
   addSchedule: (schedule: Omit<ScheduleType, 'scheduleId'>) => void;
   updateSchedule: (scheduleId: number, updates: Partial<ScheduleType>) => void;
   removeSchedule: (scheduleId: number) => void;
-  reorderSchedules: (startIndex: number, endIndex: number) => void;
   
   // MapEntity 관련 액션
-  addLocationToSchedule: (location: GooglePlaceResult, scheduleData?: Partial<ScheduleType>) => void;
+  addLocationToSchedule: (location: LocationData, scheduleData?: Partial<ScheduleType>) => void;
   removeMapEntity: (mapId: number) => void;
   updateMapEntity: (mapId: number, updates: Partial<MapEntityType>) => void;
   
@@ -71,7 +70,153 @@ interface TravelActions {
   
   // 데이터 초기화
   resetTravelData: () => void;
+  
+  // 테스트용 샘플 데이터 로드
+  loadSampleData: () => void;
 }
+
+// 샘플 데이터
+const sampleData = {
+  tour: {
+    tourId: 1,
+    title: "서울 2박 3일 여행",
+    startDate: "2025-07-15",
+    endDate: "2025-07-17"
+  },
+  schedules: [
+    {
+      scheduleId: 1,
+      tourId: 1,
+      scheduleTitle: "경복궁 관람",
+      content: "조선 왕조의 정궁, 근정전과 경회루 관람",
+      date: "2025-07-15",
+      startTime: "09:00",
+      endTime: "11:00"
+    },
+    {
+      scheduleId: 2,
+      tourId: 1,
+      scheduleTitle: "지하철 3호선 이용",
+      content: "경복궁역 → 안국역, 5분 소요",
+      date: "2025-07-15",
+      startTime: "11:15",
+      endTime: "11:20"
+    },
+    {
+      scheduleId: 3,
+      tourId: 1,
+      scheduleTitle: "북촌한옥마을 산책",
+      content: "전통 한옥의 아름다움과 서울 전경 감상",
+      date: "2025-07-15",
+      startTime: "11:30",
+      endTime: "13:00"
+    },
+    {
+      scheduleId: 4,
+      tourId: 1,
+      scheduleTitle: "명동 맛집 탐방",
+      content: "명동교자 본점에서 만두 점심",
+      date: "2025-07-15",
+      startTime: "14:00",
+      endTime: "15:30"
+    },
+    {
+      scheduleId: 5,
+      tourId: 1,
+      scheduleTitle: "남산타워 관광",
+      content: "서울의 야경 감상",
+      date: "2025-07-15",
+      startTime: "18:00",
+      endTime: "20:00"
+    }
+  ],
+  mapEntities: [
+    {
+      mapId: 1,
+      scheduleId: 1,
+      tourId: 1,
+      location: JSON.stringify({
+        name: "경복궁",
+        address: "서울특별시 종로구 사직로 161",
+        coordinates: { lat: 37.5796, lng: 126.9770 },
+        placeId: "ChIJzRz3K2WIFTER4Dl0Zw8Uy6E",
+        link: "https://maps.google.com/?cid=경복궁",
+        rating: 4.3,
+        photoUrl: "https://example.com/photo1.jpg"
+      })
+    },
+    {
+      mapId: 3,
+      scheduleId: 3,
+      tourId: 1,
+      location: JSON.stringify({
+        name: "북촌한옥마을",
+        address: "서울특별시 종로구 계동길 37",
+        coordinates: { lat: 37.5816, lng: 126.9839 },
+        placeId: "ChIJ12345example",
+        link: "https://maps.google.com/?cid=북촌한옥마을",
+        rating: 4.1,
+        photoUrl: "https://example.com/photo2.jpg"
+      })
+    },
+    {
+      mapId: 4,
+      scheduleId: 4,
+      tourId: 1,
+      location: JSON.stringify({
+        name: "명동교자 본점",
+        address: "서울특별시 중구 명동10길 29",
+        coordinates: { lat: 37.5618, lng: 126.9852 },
+        placeId: "ChIJ67890example",
+        link: "https://maps.google.com/?cid=명동교자",
+        rating: 4.0,
+        photoUrl: "https://example.com/photo3.jpg"
+      })
+    },
+    {
+      mapId: 5,
+      scheduleId: 5,
+      tourId: 1,
+      location: JSON.stringify({
+        name: "N서울타워",
+        address: "서울특별시 용산구 남산공원길 105",
+        coordinates: { lat: 37.5512, lng: 126.9882 },
+        placeId: "ChIJabcdefexample",
+        link: "https://maps.google.com/?cid=남산타워",
+        rating: 4.2,
+        photoUrl: "https://example.com/photo4.jpg"
+      })
+    }
+  ],
+  trafficData: [
+    {
+      trafficId: 2,
+      tourId: 1,
+      vehicle: JSON.stringify({
+        mode: 'TRANSIT',
+        steps: [
+          {
+            mode: 'SUBWAY',
+            line: '지하철 3호선',
+            departure: '경복궁역',
+            arrival: '안국역',
+            departureTime: '11:15',
+            arrivalTime: '11:20'
+          }
+        ],
+        totalDuration: '5분',
+        transfers: 0,
+        departure: '경복궁역',
+        destination: '안국역'
+      }),
+      spendTime: '2025-07-15T11:15:00.000Z',
+      price: 1500,
+      departureTime: '11:15',
+      arrivalTime: '11:20',
+      route: '지하철 3호선 (경복궁역 → 안국역)'
+    }
+  ]
+};
 
 // 초기 상태
 const initialState: TravelState = {
@@ -143,18 +288,25 @@ export const useTravelStore = create<TravelState & TravelActions>()(
           'removeSchedule'
         ),
 
-      reorderSchedules: (startIndex, endIndex) => {
-        const { schedules } = get();
-        const result = Array.from(schedules);
-        const [removed] = result.splice(startIndex, 1);
-        result.splice(endIndex, 0, removed);
-        set({ schedules: result }, false, 'reorderSchedules');
-      },
-
       // MapEntity 관련 액션
       addLocationToSchedule: (location, scheduleData = {}) => {
-        const { currentTour } = get();
-        if (!currentTour) return;
+        let { currentTour } = get();
+        
+        // currentTour가 없으면 기본 투어 생성
+        if (!currentTour) {
+          const defaultTour: TourType = {
+            tourId: Date.now(),
+            title: "나의 여행 계획",
+            startDate: new Date().toISOString().split('T')[0],
+            endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // 7일 후
+          };
+          
+          // 기본 투어 설정
+          set({ currentTour: defaultTour }, false, 'setDefaultTour');
+          currentTour = defaultTour;
+          
+          console.log('기본 투어 자동 생성:', defaultTour);
+        }
 
         // 기본 시간 설정 (2시간)
         const now = new Date();
@@ -166,33 +318,24 @@ export const useTravelStore = create<TravelState & TravelActions>()(
         const newSchedule: ScheduleType = {
           scheduleId: Date.now(),
           tourId: currentTour.tourId!,
-          scheduleTitle: location.name || '새로운 장소',
-          content: location.formatted_address || '',
+          scheduleTitle: location.name,
+          content: location.address,
           date: new Date().toISOString().split('T')[0],
           startTime: defaultStartTime,
           endTime: defaultEndTime,
           ...scheduleData,
         };
 
-        // MapEntity 생성
-        const locationData = {
-          name: location.name || '',
-          link: `https://maps.google.com/maps?place_id=${location.place_id}`,
-          placeId: location.place_id || '',
-          address: location.formatted_address || '',
-          photoUrl: location.photos?.[0]?.getUrl({ maxWidth: 400 }) || '',
-          rating: location.rating || 0,
-        };
-
+        // MapEntity 생성 - LocationData를 JSON으로 저장
         const newMapEntity: MapEntityType = {
           mapId: Date.now() + 1,
           scheduleId: newSchedule.scheduleId!,
           tourId: currentTour.tourId!,
-          location: JSON.stringify(locationData),
-          googleMapLink: locationData.link,
-          photoUrl: locationData.photoUrl,
-          rating: locationData.rating,
+          location: JSON.stringify(location), // LocationData 전체를 JSON으로 저장
         };
+
+        console.log('일정 추가 - Schedule:', newSchedule);
+        console.log('일정 추가 - MapEntity:', newMapEntity);
 
         set(
           (state) => ({
@@ -228,8 +371,23 @@ export const useTravelStore = create<TravelState & TravelActions>()(
 
       // Traffic 관련 액션
       addRouteToSchedule: (route, scheduleData = {}) => {
-        const { currentTour } = get();
-        if (!currentTour) return;
+        let { currentTour } = get();
+        
+        // currentTour가 없으면 기본 투어 생성
+        if (!currentTour) {
+          const defaultTour: TourType = {
+            tourId: Date.now(),
+            title: "나의 여행 계획",
+            startDate: new Date().toISOString().split('T')[0],
+            endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // 7일 후
+          };
+          
+          // 기본 투어 설정
+          set({ currentTour: defaultTour }, false, 'setDefaultTour');
+          currentTour = defaultTour;
+          
+          console.log('기본 투어 자동 생성 (교통편):', defaultTour);
+        }
 
         // Schedule 생성
         const newSchedule: ScheduleType = {
@@ -263,6 +421,9 @@ export const useTravelStore = create<TravelState & TravelActions>()(
           arrivalTime: route.arrivalTime,
           route: route.route.map(step => `${step.line} (${step.departure} → ${step.arrival})`).join(', '),
         };
+
+        console.log('교통편 추가 - Schedule:', newSchedule);
+        console.log('교통편 추가 - Traffic:', newTraffic);
 
         set(
           (state) => ({
@@ -325,6 +486,19 @@ export const useTravelStore = create<TravelState & TravelActions>()(
           false,
           'resetTravelData'
         ),
+
+      // 테스트용 샘플 데이터 로드
+      loadSampleData: () =>
+        set(
+          {
+            currentTour: sampleData.tour,
+            schedules: sampleData.schedules,
+            mapEntities: sampleData.mapEntities,
+            trafficData: sampleData.trafficData,
+          },
+          false,
+          'loadSampleData'
+        ),
     }),
     {
       name: 'travel-store', // devtools에서 보여질 이름
@@ -341,7 +515,6 @@ export const useTravelActions = () => {
     addSchedule: store.addSchedule,
     updateSchedule: store.updateSchedule,
     removeSchedule: store.removeSchedule,
-    reorderSchedules: store.reorderSchedules,
     addLocationToSchedule: store.addLocationToSchedule,
     removeMapEntity: store.removeMapEntity,
     updateMapEntity: store.updateMapEntity,
@@ -356,6 +529,7 @@ export const useTravelActions = () => {
     setLoading: store.setLoading,
     setError: store.setError,
     resetTravelData: store.resetTravelData,
+    loadSampleData: store.loadSampleData,
   };
 };
 

@@ -1,5 +1,5 @@
 import api, { ApiResponse } from './api';
-import { MapEntityType } from '../types/types/travel';
+import { MapEntityType } from '../types/travel';
 
 // MapEntity API 서비스
 export const mapAPI = {

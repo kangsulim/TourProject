@@ -1,5 +1,5 @@
 import api, { ApiResponse } from './api';
-import { WeatherType } from '../types/types/travel';
+import { WeatherType } from '../types/travel';
 
 // Weather API 서비스
 export const weatherAPI = {

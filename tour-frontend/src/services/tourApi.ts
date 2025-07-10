@@ -1,5 +1,5 @@
 import api, { ApiResponse } from './api';
-import { TourType, ScheduleType, MapEntityType, TrafficType } from '../types/types/travel';
+import { TourType, ScheduleType, MapEntityType, TrafficType } from '../types/travel';
 
 // Tour API 서비스
 export const tourAPI = {
