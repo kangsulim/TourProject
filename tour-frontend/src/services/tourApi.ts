@@ -1,7 +1,7 @@
 import api, { ApiResponse } from './api';
-import { TourType, ScheduleType, MapEntityType, TrafficType } from '../types/travel';
+import { TourType } from '../types/travel';
 
-// Tour API 서비스
+// Tour API 서비스 - 백엔드 통합 저장 방식
 export const tourAPI = {
   // 모든 여행 목록 조회
   getAllTours: async (): Promise<TourType[]> => {
@@ -21,13 +21,13 @@ export const tourAPI = {
     return response.data.data;
   },
 
-  // 새 여행 생성
-  createTour: async (tourData: Omit<TourType, 'tourId'>): Promise<TourType> => {
+  // 새 여행 생성 (통합 저장)
+  createTour: async (tourData: Omit<TourType, 'tourId' | 'createDate' | 'modifiedDate'>): Promise<TourType> => {
     const response = await api.post<ApiResponse<TourType>>('/tours', tourData);
     return response.data.data;
   },
 
-  // 여행 정보 수정
+  // 여행 정보 수정 (통합 저장)
   updateTour: async (tourId: number, tourData: Partial<TourType>): Promise<TourType> => {
     const response = await api.put<ApiResponse<TourType>>(`/tours/${tourId}`, tourData);
     return response.data.data;
@@ -38,31 +38,15 @@ export const tourAPI = {
     await api.delete(`/tours/${tourId}`);
   },
 
-  // 여행 계획 전체 저장 (일정, 여행지, 교통편 포함)
-  saveTourPlan: async (
-    tourId: number,
-    planData: {
-      schedules: ScheduleType[];
-      mapEntities: MapEntityType[];
-      trafficData: TrafficType[];
-    }
-  ): Promise<void> => {
-    await api.post(`/tours/${tourId}/plan`, planData);
+  // 여행 계획 복사
+  copyTour: async (tourId: number, newUserId: number): Promise<TourType> => {
+    const response = await api.post<ApiResponse<TourType>>(`/tours/${tourId}/copy?newUserId=${newUserId}`);
+    return response.data.data;
   },
 
-  // 여행 계획 전체 조회
-  getTourPlan: async (tourId: number): Promise<{
-    tour: TourType;
-    schedules: ScheduleType[];
-    mapEntities: MapEntityType[];
-    trafficData: TrafficType[];
-  }> => {
-    const response = await api.get<ApiResponse<{
-      tour: TourType;
-      schedules: ScheduleType[];
-      mapEntities: MapEntityType[];
-      trafficData: TrafficType[];
-    }>>(`/tours/${tourId}/plan`);
+  // 사용자의 여행 계획 개수 조회
+  getUserTourCount: async (userId: number): Promise<number> => {
+    const response = await api.get<ApiResponse<number>>(`/tours/user/${userId}/count`);
     return response.data.data;
   }
 };

@@ -57,9 +57,14 @@
 // types/travel.ts
 export interface TourType {
   tourId?: number;
+  userId?: number;
   title: string;
   startDate: string;
   endDate: string;
+  travelers: number;        // 여행자 수
+  budget: 'low' | 'medium' | 'high' | 'luxury';  // 예산 범위
+  createDate?: string;
+  modifiedDate?: string;
 }
 
 export interface ScheduleType {
@@ -140,6 +145,137 @@ interface TravelState {
 - TypeScript 타입이 백엔드 Entity와 정확히 매칭되는지 확인
 - Google Maps API 타입과 우리 커스텀 타입 간의 변환 로직 검증
 - 상태 관리 라이브러리 Zustand 결정
+
+### Phase 1.5: 여행 기본 정보 폼 구현
+
+#### 1.5.1 여행 정보 컴포넌트 구현
+```typescript
+// components/TravelInfo/TravelInfo.tsx
+export const TravelInfo: React.FC = () => {
+  const [travelData, setTravelData] = useState<TourType>({
+    title: '',
+    startDate: '',
+    endDate: '',
+    travelers: 2,
+    budget: 'medium'
+  });
+
+  return (
+    <Paper sx={{ p: 2 }}>
+      <Typography variant="h6" gutterBottom>
+        🎯 여행 정보
+      </Typography>
+      
+      <TextField
+        fullWidth
+        label="여행 제목"
+        placeholder="예: 김철수의 서울 여행"
+        value={travelData.title}
+        onChange={(e) => setTravelData(prev => ({...prev, title: e.target.value}))}
+        margin="normal"
+      />
+      
+      <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+        <TextField
+          type="date"
+          label="시작일"
+          value={travelData.startDate}
+          onChange={(e) => setTravelData(prev => ({...prev, startDate: e.target.value}))}
+          InputLabelProps={{ shrink: true }}
+          sx={{ flex: 1 }}
+        />
+        <TextField
+          type="date"
+          label="종료일"
+          value={travelData.endDate}
+          onChange={(e) => setTravelData(prev => ({...prev, endDate: e.target.value}))}
+          InputLabelProps={{ shrink: true }}
+          sx={{ flex: 1 }}
+        />
+      </Box>
+      
+      <FormControl fullWidth margin="normal">
+        <InputLabel>여행자 수</InputLabel>
+        <Select
+          value={travelData.travelers}
+          onChange={(e) => setTravelData(prev => ({...prev, travelers: Number(e.target.value)}))}
+        >
+          <MenuItem value={1}>1명 (혼자)</MenuItem>
+          <MenuItem value={2}>2명 (커플/친구)</MenuItem>
+          <MenuItem value={3}>3명</MenuItem>
+          <MenuItem value={4}>4명 (가족)</MenuItem>
+          <MenuItem value={5}>5명 이상</MenuItem>
+        </Select>
+      </FormControl>
+      
+      <FormControl fullWidth margin="normal">
+        <InputLabel>예상 예산</InputLabel>
+        <Select
+          value={travelData.budget}
+          onChange={(e) => setTravelData(prev => ({...prev, budget: e.target.value as any}))}
+        >
+          <MenuItem value="low">50만원 이하</MenuItem>
+          <MenuItem value="medium">50-100만원</MenuItem>
+          <MenuItem value="high">100-200만원</MenuItem>
+          <MenuItem value="luxury">200만원 이상</MenuItem>
+        </Select>
+      </FormControl>
+    </Paper>
+  );
+};
+```
+
+#### 1.5.2 상태 관리 확장
+```typescript
+// store/travelStore.ts에 추가
+interface TravelState {
+  currentTour: TourType | null;
+  // 기존 상태들...
+  
+  // 액션 추가
+  updateTourInfo: (tourInfo: Partial<TourType>) => void;
+  resetTourInfo: () => void;
+}
+```
+
+#### 1.5.3 Tours.tsx 레이아웃 수정
+```typescript
+// pages/Tours/Tours.tsx
+export const Tours: React.FC = () => {
+  return (
+    <Box sx={{ display: 'flex', height: '100vh' }}>
+      {/* 지도 영역 (60%) */}
+      <Box sx={{ flex: '0 0 60%' }}>
+        <Maps />
+      </Box>
+      
+      {/* 사이드 패널 영역 (40%) */}
+      <Box sx={{ flex: '0 0 40%', display: 'flex', flexDirection: 'column' }}>
+        {/* 여행 정보 (25%) */}
+        <Box sx={{ flex: '0 0 25%', overflow: 'auto' }}>
+          <TravelInfo />
+        </Box>
+        
+        {/* 날씨 정보 (15%) */}
+        <Box sx={{ flex: '0 0 15%' }}>
+          <Weathers location={selectedLocation} />
+        </Box>
+        
+        {/* 일정 관리 (60%) */}
+        <Box sx={{ flex: '1', overflow: 'auto' }}>
+          <Schedules />
+        </Box>
+      </Box>
+    </Box>
+  )
+}
+```
+
+**주요 확인 사항**:
+- Material-UI 컴포넌트 스타일링 일관성 확보
+- 반응형 디자인 (모바일에서는 접힐 수 있도록)
+- 입력 데이터 실시간 검증 (날짜 유효성, 제목 길이 등)
+- 상태 관리와의 연동 확인
 
 ### Phase 2: Google Maps 통합 및 지도 기능 구현
 
@@ -409,12 +545,13 @@ export const Tours: React.FC = () => {
 - **접근성**: 키보드 내비게이션, 스크린 리더 지원
 
 ### 6. 개발 우선순위
-1. **1순위**: Maps.tsx (검색 기능)
-2. **2순위**: Schedules.tsx (일정 관리)
-3. **3순위**: 교통편 조회 기능
-4. **4순위**: Weathers.tsx
-5. **5순위**: 데이터 저장 기능
-6. **6순위**: Tours.tsx 통합
+1. **1순위**: 여행 정보 폼 (TravelInfo.tsx)
+2. **2순위**: Maps.tsx (검색 기능)
+3. **3순위**: Schedules.tsx (일정 관리)
+4. **4순위**: 교통편 조회 기능
+5. **5순위**: Weathers.tsx
+6. **6순위**: 데이터 저장 기능
+7. **7순위**: Tours.tsx 통합
 
 ## 🔄 개발 프로세스
 
@@ -425,6 +562,13 @@ export const Tours: React.FC = () => {
 - [ ] 상태 관리 스토어 설정 완료
 - [ ] Google Maps API 키 설정 및 테스트
 - [ ] OpenWeather API 키 설정 및 테스트
+
+#### Phase 1.5 완료 시
+- [ ] 여행 정보 폼 컴포넌트 구현 완료
+- [ ] 여행자 수 및 예산 선택 기능 동작
+- [ ] 날짜 입력 유효성 검증 (시작일 ≤ 종료일)
+- [ ] 상태 관리와의 연동 확인
+- [ ] 반응형 레이아웃 적용
 
 #### Phase 2 완료 시
 - [ ] 지도 정상 렌더링

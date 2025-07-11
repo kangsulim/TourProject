@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import {
   TourType,
+  TravelPlanDto,
   ScheduleType,
   MapEntityType,
   TrafficType,
@@ -11,6 +12,8 @@ import {
   VehicleData
 } from '../types/travel';
 import { GooglePlaceResult } from '../types/googleMaps';
+import { convertTourToBackendFormat, convertTourFromBackendFormat } from '../utils/tourDataConverter';
+import { tourAPI } from '../services/tourApi';
 
 interface TravelState {
   // 현재 여행 정보
@@ -38,7 +41,9 @@ interface TravelState {
 interface TravelActions {
   // Tour 관련 액션
   setCurrentTour: (tour: TourType) => void;
+  updateTourInfo: (tourInfo: Partial<TourType>) => void;
   clearCurrentTour: () => void;
+  resetTourInfo: () => void;
   
   // Schedule 관련 액션
   addSchedule: (schedule: Omit<ScheduleType, 'scheduleId'>) => void;
@@ -73,6 +78,12 @@ interface TravelActions {
   
   // 테스트용 샘플 데이터 로드
   loadSampleData: () => void;
+  
+  // 백엔드 연동 액션들
+  saveTourToBackend: () => Promise<TourType | null>;
+  loadTourFromBackend: (tourId: number) => Promise<void>;
+  loadUserToursFromBackend: (userId: number) => Promise<TourType[]>;
+  createNewTourInBackend: (userId: number) => Promise<TourType | null>;
 }
 
 // 샘플 데이터
@@ -81,7 +92,9 @@ const sampleData = {
     tourId: 1,
     title: "서울 2박 3일 여행",
     startDate: "2025-07-15",
-    endDate: "2025-07-17"
+    endDate: "2025-07-17",
+    travelers: 2,
+    budget: 'medium'
   },
   schedules: [
     {
@@ -243,8 +256,37 @@ export const useTravelStore = create<TravelState & TravelActions>()(
       setCurrentTour: (tour) => 
         set({ currentTour: tour }, false, 'setCurrentTour'),
 
+      updateTourInfo: (tourInfo) =>
+        set(
+          (state) => ({
+            currentTour: state.currentTour
+              ? { ...state.currentTour, ...tourInfo }
+              : { 
+                  title: '',
+                  startDate: '',
+                  endDate: '',
+                  travelers: 2,
+                  budget: 'medium' as const,
+                  ...tourInfo 
+                }
+          }),
+          false,
+          'updateTourInfo'
+        ),
+
       clearCurrentTour: () => 
         set({ currentTour: null }, false, 'clearCurrentTour'),
+
+      resetTourInfo: () =>
+        set({ 
+          currentTour: {
+            title: '',
+            startDate: '',
+            endDate: '',
+            travelers: 2,
+            budget: 'medium'
+          } 
+        }, false, 'resetTourInfo'),
 
       // Schedule 관련 액션
       addSchedule: (schedule) => {
@@ -298,7 +340,9 @@ export const useTravelStore = create<TravelState & TravelActions>()(
             tourId: Date.now(),
             title: "나의 여행 계획",
             startDate: new Date().toISOString().split('T')[0],
-            endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // 7일 후
+            endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 7일 후
+            travelers: 2,
+            budget: 'medium'
           };
           
           // 기본 투어 설정
@@ -379,7 +423,9 @@ export const useTravelStore = create<TravelState & TravelActions>()(
             tourId: Date.now(),
             title: "나의 여행 계획",
             startDate: new Date().toISOString().split('T')[0],
-            endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // 7일 후
+            endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 7일 후
+            travelers: 2,
+            budget: 'medium'
           };
           
           // 기본 투어 설정
@@ -499,6 +545,229 @@ export const useTravelStore = create<TravelState & TravelActions>()(
           false,
           'loadSampleData'
         ),
+
+      // 백엔드 연동 액션들
+      saveTourToBackend: async () => {
+        const { currentTour, schedules, mapEntities, trafficData, weatherData } = get();
+        
+        if (!currentTour) {
+          console.error('저장할 여행 데이터가 없습니다.');
+          return null;
+        }
+
+        try {
+          set({ isLoading: true, error: null }, false, 'saveTourToBackend:start');
+          
+          console.log('=== 저장 시작 ===');
+          console.log('현재 투어:', currentTour);
+          console.log('일정 목록:', schedules);
+          console.log('지도 엔티티:', mapEntities);
+          console.log('교통편 데이터:', trafficData);
+          console.log('날씨 데이터:', weatherData);
+          
+          // 사용자 인증 상태 확인 및 userId 가져오기
+          const storedUser = localStorage.getItem('user');
+          let currentUserId = currentTour.userId;
+          
+          if (!currentUserId && storedUser) {
+            try {
+              const userData = JSON.parse(storedUser);
+              currentUserId = userData.userId;
+              console.log('localStorage에서 userId 가져옴:', currentUserId);
+            } catch (error) {
+              console.error('localStorage 사용자 데이터 파싱 실패:', error);
+            }
+          }
+          
+          if (!currentUserId) {
+            console.error('사용자 ID가 없습니다. 로그인이 필요합니다.');
+            set({
+              isLoading: false,
+              error: '로그인이 필요합니다. 사용자 인증 후 다시 시도해주세요.'
+            }, false, 'saveTourToBackend:nouser');
+            return null;
+          }
+          
+          // currentTour에 userId 설정
+          currentTour.userId = currentUserId;
+          
+          // 프론트엔드 데이터를 백엔드 형식으로 변환
+          const backendTour = convertTourToBackendFormat(
+            currentTour,
+            schedules,
+            mapEntities,
+            trafficData,
+            weatherData
+          );
+          
+          console.log('백엔드 전송 데이터:', JSON.stringify(backendTour, null, 2));
+
+          let savedTour: TourType;
+          
+          if (currentTour.tourId) {
+            // 기존 여행 수정
+            savedTour = await tourAPI.updateTour(currentTour.tourId, backendTour);
+            console.log('여행 계획 수정 완료:', savedTour);
+          } else {
+            // 새 여행 생성
+            savedTour = await tourAPI.createTour(backendTour);
+            console.log('새 여행 계획 생성 완료:', savedTour);
+          }
+
+          // 저장된 데이터로 업데이트
+          set(
+            {
+              currentTour: {
+                ...currentTour,
+                tourId: savedTour.tourId,
+                createDate: savedTour.createDate,
+                modifiedDate: savedTour.modifiedDate
+              },
+              isLoading: false
+            },
+            false,
+            'saveTourToBackend:success'
+          );
+
+          return savedTour;
+        } catch (error) {
+          console.error('여행 계획 저장 실패:', error);
+          
+          // Axios 에러 상세 정보 추출
+          if (error && typeof error === 'object' && 'response' in error) {
+            const axiosError = error as any;
+            console.error('백엔드 응답:', axiosError.response?.data);
+            console.error('상태 코드:', axiosError.response?.status);
+            console.error('요청 데이터:', axiosError.config?.data);
+          }
+          
+          set(
+            {
+              isLoading: false,
+              error: error instanceof Error ? error.message : '저장 중 오류가 발생했습니다.'
+            },
+            false,
+            'saveTourToBackend:error'
+          );
+          return null;
+        }
+      },
+
+      loadTourFromBackend: async (tourId: number) => {
+        try {
+          set({ isLoading: true, error: null }, false, 'loadTourFromBackend:start');
+          
+          const backendTour = await tourAPI.getTourById(tourId);
+          const converted = convertTourFromBackendFormat(backendTour);
+          
+          set(
+            {
+              currentTour: converted.tour,
+              schedules: converted.schedules,
+              mapEntities: converted.mapEntities,
+              trafficData: converted.trafficData,
+              weatherData: converted.weatherData,
+              isLoading: false
+            },
+            false,
+            'loadTourFromBackend:success'
+          );
+          
+          console.log('여행 계획 로드 완료:', converted);
+        } catch (error) {
+          console.error('여행 계획 로드 실패:', error);
+          set(
+            {
+              isLoading: false,
+              error: error instanceof Error ? error.message : '로드 중 오류가 발생했습니다.'
+            },
+            false,
+            'loadTourFromBackend:error'
+          );
+        }
+      },
+
+      loadUserToursFromBackend: async (userId: number) => {
+        try {
+          set({ isLoading: true, error: null }, false, 'loadUserToursFromBackend:start');
+          
+          const tours = await tourAPI.getToursByUserId(userId);
+          
+          set({ isLoading: false }, false, 'loadUserToursFromBackend:success');
+          
+          console.log('사용자 여행 목록 로드 완료:', tours);
+          return tours;
+        } catch (error) {
+          console.error('사용자 여행 목록 로드 실패:', error);
+          set(
+            {
+              isLoading: false,
+              error: error instanceof Error ? error.message : '목록 로드 중 오류가 발생했습니다.'
+            },
+            false,
+            'loadUserToursFromBackend:error'
+          );
+          return [];
+        }
+      },
+
+      createNewTourInBackend: async (userId: number) => {
+        try {
+          set({ isLoading: true, error: null }, false, 'createNewTourInBackend:start');
+          
+          const today = new Date().toISOString().split('T')[0];
+          const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+          
+          const newTourData: Omit<TourType, 'tourId' | 'createDate' | 'modifiedDate'> = {
+            userId,
+            title: '나의 여행 계획',
+            startDate: today,
+            endDate: nextWeek,
+            travelers: 2,
+            budget: 'medium',
+            planData: {
+              schedules: [],
+              weatherData: [],
+              metadata: {
+                version: '1.0',
+                lastUpdated: new Date().toISOString(),
+                totalDays: 0,
+                estimatedBudget: 0
+              }
+            }
+          };
+          
+          const createdTour = await tourAPI.createTour(newTourData);
+          
+          // 생성된 여행을 현재 여행으로 설정
+          set(
+            {
+              currentTour: createdTour,
+              schedules: [],
+              mapEntities: [],
+              trafficData: [],
+              weatherData: [],
+              isLoading: false
+            },
+            false,
+            'createNewTourInBackend:success'
+          );
+          
+          console.log('새 여행 생성 완료:', createdTour);
+          return createdTour;
+        } catch (error) {
+          console.error('새 여행 생성 실패:', error);
+          set(
+            {
+              isLoading: false,
+              error: error instanceof Error ? error.message : '생성 중 오류가 발생했습니다.'
+            },
+            false,
+            'createNewTourInBackend:error'
+          );
+          return null;
+        }
+      },
     }),
     {
       name: 'travel-store', // devtools에서 보여질 이름
@@ -511,7 +780,9 @@ export const useTravelActions = () => {
   const store = useTravelStore();
   return {
     setCurrentTour: store.setCurrentTour,
+    updateTourInfo: store.updateTourInfo,
     clearCurrentTour: store.clearCurrentTour,
+    resetTourInfo: store.resetTourInfo,
     addSchedule: store.addSchedule,
     updateSchedule: store.updateSchedule,
     removeSchedule: store.removeSchedule,
@@ -530,6 +801,11 @@ export const useTravelActions = () => {
     setError: store.setError,
     resetTravelData: store.resetTravelData,
     loadSampleData: store.loadSampleData,
+    // 백엔드 연동 액션들
+    saveTourToBackend: store.saveTourToBackend,
+    loadTourFromBackend: store.loadTourFromBackend,
+    loadUserToursFromBackend: store.loadUserToursFromBackend,
+    createNewTourInBackend: store.createNewTourInBackend,
   };
 };
 

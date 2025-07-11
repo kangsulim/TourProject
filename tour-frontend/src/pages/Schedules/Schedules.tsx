@@ -265,7 +265,7 @@ const TimeEditDialog: React.FC<TimeEditDialogProps> = ({
 // 메인 Schedules 컴포넌트
 const Schedules: React.FC = () => {
   const { schedules, mapEntities, trafficData, currentTour } = useTravelState();
-  const { updateSchedule, removeSchedule, loadSampleData } = useTravelActions();
+  const { updateSchedule, removeSchedule, loadSampleData, saveTourToBackend } = useTravelActions();
   
   const [editingSchedule, setEditingSchedule] = useState<ScheduleType | null>(null);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
@@ -311,29 +311,42 @@ const Schedules: React.FC = () => {
     setTimeout(() => setSaveStatus('idle'), 2000);
   }, [removeSchedule]);
 
-  // 저장 핸들러 (추후 API 연동)
+  // 저장 핸들러 (백엔드 API 연동)
   const handleSave = useCallback(async () => {
+    if (!currentTour) {
+      setSaveStatus('error');
+      setTimeout(() => setSaveStatus('idle'), 3000);
+      return;
+    }
+
     setSaveStatus('saving');
     try {
-      // TODO: API 호출로 서버에 저장
-      console.log('저장할 데이터:', { schedules, mapEntities, trafficData });
+      // 백엔드에 저장
+      const savedTour = await saveTourToBackend();
       
-      // 임시로 로컬 스토리지에 저장
-      localStorage.setItem('travel-schedules', JSON.stringify({
-        schedules,
-        mapEntities,
-        trafficData,
-        lastSaved: new Date().toISOString(),
-      }));
+      if (savedTour) {
+        console.log('백엔드 저장 성공:', savedTour);
+        setSaveStatus('saved');
+        
+        // 로컬 스토리지에도 백업 저장
+        localStorage.setItem('travel-schedules-backup', JSON.stringify({
+          schedules,
+          mapEntities,
+          trafficData,
+          lastSaved: new Date().toISOString(),
+          tourId: savedTour.tourId
+        }));
+      } else {
+        setSaveStatus('error');
+      }
       
-      setSaveStatus('saved');
       setTimeout(() => setSaveStatus('idle'), 3000);
     } catch (error) {
       console.error('저장 실패:', error);
       setSaveStatus('error');
       setTimeout(() => setSaveStatus('idle'), 3000);
     }
-  }, [schedules, mapEntities, trafficData]);
+  }, [currentTour, schedules, mapEntities, trafficData, saveTourToBackend]);
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', p: 2 }}>
