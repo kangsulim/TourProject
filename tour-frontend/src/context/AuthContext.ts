@@ -4,7 +4,8 @@ import { createContext } from 'react';
 // 로그인한 사용자 정보를 담을 User 타입 정의
 interface User {
   userId: number;      // 사용자 고유 ID
-  username: string;    // 사용자 이름 (닉네임 등)
+  username: string; 
+  role: 'USER' | 'ADMIN';   // 사용자 이름 (닉네임 등)
   // 필요에 따라 이메일 등 추가 가능
 }
 
@@ -19,7 +20,7 @@ interface AuthContextType {
 
 // 기본값 빈 상태 (초기값)
 // 실제 Context 사용 시 이 값은 거의 쓰이지 않지만, 타입 안전성을 위해 설정
-const defaultAuthContext: AuthContextType = {
+export const defaultAuthContext: AuthContextType = {
   token: null,            // 기본은 로그인되지 않은 상태
   user: null,             // 사용자 정보도 없음
   login: () => {},        // 기본 login 함수는 빈 함수 (실제 구현은 Provider에서)
@@ -32,8 +33,3 @@ const defaultAuthContext: AuthContextType = {
 export const AuthContext = createContext<AuthContextType>(defaultAuthContext);
 // 다른 파일에서 import 할 때 `import AuthContext from ...` 으로 불러올 수 있게 함
 export default AuthContext;
-
-
-
-
-

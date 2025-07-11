@@ -690,8 +690,8 @@ const IntegratedTravelPlanner: React.FC = () => {
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
                             <span>
                               {step.transitDetails?.transitLine.vehicle?.type === 'BUS' ? '🚌' :
-                               step.transitDetails?.transitLine.vehicle?.type === 'SUBWAY' ? '🚇' :
-                               step.transitDetails?.transitLine.vehicle?.type === 'TRAIN' ? '🚄' : '🚊'}
+                                step.transitDetails?.transitLine.vehicle?.type === 'SUBWAY' ? '🚇' :
+                                step.transitDetails?.transitLine.vehicle?.type === 'TRAIN' ? '🚄' : '🚊'}
                             </span>
                             <Typography variant="body2">
                               <strong>{step.transitDetails?.transitLine.name}</strong>

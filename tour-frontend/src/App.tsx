@@ -106,11 +106,14 @@ export default function App() {
                       <MyPage />
                     </ProtectedRoute>
                   } />
-                  <Route path="/adminpage" element={
-                  <ProtectedRoute>
-                    <Adminpage />
-                  </ProtectedRoute>
-                } />
+                    <Route
+                    path="/adminpage"
+                    element={
+                      <ProtectedRoute requiredRole="ADMIN">
+                        <Adminpage />
+                      </ProtectedRoute>
+                    }
+                  />
                 </Routes>
               </main>
               {/* Footer - 항상 하단에 위치 */}

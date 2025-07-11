@@ -85,4 +85,12 @@ public class UserController {
             return ResponseEntity.status(500).body(null);
         }
     }
+
+    // 관리자가 유저 삭제 하기 위해
+    @DeleteMapping("/{userId}")
+    public ResponseEntity<String> deleteUser(@PathVariable Long userId) {
+        userService.deleteUser(userId);
+        return ResponseEntity.ok("사용자 삭제 완료");
+    }
+
 }
