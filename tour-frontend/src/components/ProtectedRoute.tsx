@@ -7,6 +7,7 @@ interface ProtectedRouteProps {
   children: ReactNode;
   fallbackPath?: string;
   showLoginPrompt?: boolean;
+  requiredRole?: string; // ?? 7/14
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 

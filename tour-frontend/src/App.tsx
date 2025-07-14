@@ -1,5 +1,7 @@
 import { Header } from "./components/Header";
 import Footer from "./components/Footer";
+import { LocationProvider } from "./context/LocationContext";
+import { TravelProvider } from "./context/TravelContext";
 import AuthProvider from "./context/AuthProvider";
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -7,7 +9,7 @@ import CssBaseline from '@mui/material/CssBaseline';
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import MainPage from "./pages/mainpage/mainpage";
 import Tour from "./pages/Tours/Tours";
-// import Traffic from "./pages/Traffic/Traffic";
+import { Traffic } from "./pages/Traffic/Traffic";
 import ThreadList from './pages/Threads/ThreadList';
 import ThreadCreate from './pages/Threads/ThreadCreate';
 import ThreadDetail from './pages/Threads/ThreadDetail';
@@ -52,6 +54,8 @@ export default function App() {
         }}
       >
         <Router>
+          <TravelProvider>
+            <LocationProvider>
               <AuthProvider>
               <Header />
               
@@ -68,11 +72,11 @@ export default function App() {
                       <Tour />
                     </ProtectedRoute>
                   } />
-                  {/* <Route path="/traffic" element={
+                  <Route path="/traffic" element={
                     <ProtectedRoute>
                       <Traffic />
                     </ProtectedRoute>
-                  } /> */}
+                  } />
                   <Route
                     path="/thread"
                     element={
@@ -102,16 +106,21 @@ export default function App() {
                       <MyPage />
                     </ProtectedRoute>
                   } />
-                  <Route path="/adminpage" element={
-                  <ProtectedRoute>
-                    <Adminpage />
-                  </ProtectedRoute>
-                } />
+                    <Route
+                    path="/adminpage"
+                    element={
+                      <ProtectedRoute requiredRole="ADMIN">
+                        <Adminpage />
+                      </ProtectedRoute>
+                    }
+                  />
                 </Routes>
               </main>
               {/* Footer - 항상 하단에 위치 */}
               <Footer />
               </AuthProvider>
+            </LocationProvider>
+          </TravelProvider>
         </Router>
       </div>
     </ThemeProvider>
