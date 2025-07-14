@@ -1,11 +1,12 @@
 import { useState, useEffect, ReactNode } from 'react';
-import { AuthContext } from './AuthContext';  
+import { AuthContext, AuthContextType } from './AuthContext';  
 import { getToken, setToken, removeToken } from '../utils/token';
 
 // 사용자 정보를 담을 타입
 interface User {
   userId: number;
   username: string;
+  role: 'USER' | 'ADMIN';
 }
 
 interface AuthProviderProps {
@@ -60,9 +61,17 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
       }
     }
   }, []);
+  // AuthContextType 에 맞춰서 value 제공
+  const contextValue: AuthContextType = {
+    token,
+    user,
+    login,
+    logout,
+    isAuthenticated,
+  };
 
   return (
-    <AuthContext.Provider value={{ token, user, login, logout, isAuthenticated }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );

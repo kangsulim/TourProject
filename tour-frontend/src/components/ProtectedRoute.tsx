@@ -13,7 +13,8 @@ interface ProtectedRouteProps {
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
   children, 
   fallbackPath = '/',
-  showLoginPrompt = true 
+  showLoginPrompt = true,
+  requiredRole //7/14
 }) => {
   const authContext = useContext(AuthContext);
   const location = useLocation();
@@ -22,7 +23,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     throw new Error('ProtectedRoute must be used within an AuthProvider');
   }
   
-  const { isAuthenticated } = authContext;
+  const { isAuthenticated, user} = authContext;
 
   // 로그인되지 않은 경우
   if (!isAuthenticated) {
@@ -63,6 +64,12 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
     // 단순 리다이렉트
     return <Navigate to={fallbackPath} state={{ from: location }} replace />;
+  }
+   // 로그인은 되었지만 requiredRole이 지정되어있고,
+  // user가 없거나 역할이 맞지 않으면 접근 금지 처리
+  if (requiredRole && (!user || user.role !== requiredRole)) {  // <-- 추가된 권한 체크 7/14
+    // 권한이 맞지 않으면 메인 페이지 등으로 리다이렉트
+    return <Navigate to="/" replace />;
   }
 
   // 로그인된 경우 자식 컴포넌트 렌더링
