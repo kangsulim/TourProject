@@ -17,6 +17,7 @@ public class CommentDto {
     private LocalDateTime modifiedDate;
     private Long parentId; // 부모 댓글 ID 추가 7/2
     private List<CommentDto> comments; //7/2 자식 댓글 리스트
+    private Long userId;
 
 
 }

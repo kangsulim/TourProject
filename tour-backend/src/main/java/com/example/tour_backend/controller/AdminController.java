@@ -39,7 +39,13 @@ public class AdminController {
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/users/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        adminService.deleteUser(id);
-        return ResponseEntity.noContent().build();
+        try {
+            adminService.deleteUser(id);
+            return ResponseEntity.noContent().build();
+        } catch (Exception e) {
+            System.err.println("❌ 관리자 사용자 삭제 실패: " + e.getMessage());
+            // 에러 메시지를 클라이언트에 전달하기 위해 500 에러 반환
+            return ResponseEntity.status(500).build();
+        }
     }
 }
