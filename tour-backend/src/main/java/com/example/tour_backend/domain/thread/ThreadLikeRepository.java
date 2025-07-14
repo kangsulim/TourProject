@@ -10,6 +10,8 @@ public interface ThreadLikeRepository extends JpaRepository<ThreadLike, Long> {
     boolean existsByUserAndThread(User user, Thread thread);
 
     void deleteByUserAndThread(User user, Thread thread);
+    // ✅ 추가: 사용자 ID로 좋아요 삭제
+    void deleteByUser_UserId(Long userId); //??
 }
 
 //좋아요 여부 체크 및 취소할 수 있도록 쿼리 메서드 제공

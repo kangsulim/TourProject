@@ -41,12 +41,12 @@ const Comments: React.FC<CommentsProps> = ({ threadId }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newComment.trim()) return;
+    if (!newComment.trim() || !user) return;
 
     const requestData: CommentRequest = {
       comment: newComment.trim(),
       threadId,
-      author: user?.username || 'anonymous',
+      userId: user.userId,
     };
 
     try {
@@ -61,12 +61,12 @@ const Comments: React.FC<CommentsProps> = ({ threadId }) => {
 
   const handleReplySubmit = async (parentId: number, e: React.FormEvent) => {
     e.preventDefault();
-    if (!replyContent.trim()) return;
+    if (!replyContent.trim() || !user) return;
 
     const requestData: CommentRequest = {
       comment: replyContent.trim(),
       threadId,
-      author: user?.username || 'anonymous',
+      userId: user.userId, 
       parentId,
     };
 
@@ -92,7 +92,7 @@ const Comments: React.FC<CommentsProps> = ({ threadId }) => {
   };
 
   const handleSaveEdit = async (commentId: number) => {
-    if (!editingContent.trim()) {
+    if (!editingContent.trim() || !user) {
       alert('댓글 내용을 입력하세요.');
       return;
     }
@@ -101,7 +101,7 @@ const Comments: React.FC<CommentsProps> = ({ threadId }) => {
       await updateComment(commentId, {
         comment: editingContent.trim(),
         threadId,
-        author: user?.username || 'anonymous',
+        userId: user.userId, // ✅ userId 추가
       });
       await fetchComments();
       setEditingCommentId(null);

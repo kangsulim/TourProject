@@ -1,5 +1,6 @@
 package com.example.tour_backend.domain.comment;
 
+import com.example.tour_backend.domain.user.User;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
@@ -30,6 +31,7 @@ public class Comment {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String comment;
 
+    @Getter
     @Column(nullable = false)
     private String author;
 
@@ -47,14 +49,23 @@ public class Comment {
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
     private List<Comment> children = new ArrayList<>();
 
+    // 📝 댓글 작성자
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
     @Builder
-    public Comment(Thread thread, String comment, String author,
+    public Comment(Thread thread, String comment, String author,User user,
                    LocalDateTime createDate, LocalDateTime modifiedDate) {
         this.thread = thread;
         this.comment = comment;
         this.author = author;
         this.createDate = createDate;
         this.modifiedDate = modifiedDate;
+        this.user = user;
+    }
+    public String getAuthor() {
+        return author;
     }
 }
 

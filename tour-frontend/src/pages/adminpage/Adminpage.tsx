@@ -25,7 +25,7 @@ import {
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../../services/api";  // ✅ api 인스턴스 사용
 import { User } from "../../types/user";  // User 타입에 userId, name, email, role, createDate 필드가 있어야 합니다
 
 export default function Adminpage() {
@@ -56,7 +56,7 @@ export default function Adminpage() {
   // ── 마운트 시: 통계 + 전체 유저 로드 ───────────────────────────────────
   useEffect(() => {
     // 1) 통계 API 호출
-    axios.get("/api/admin/statistics")
+    api.get("/admin/statistics")  // ✅ api 인스턴스 사용
       .then(res => {
         setUserCount(res.data.userCount);
         setThreadCount(res.data.threadCount);
@@ -65,7 +65,7 @@ export default function Adminpage() {
       .catch(console.error);
 
     // 2) 전체 유저 조회 (초기에는 빈 키워드)
-    axios.get("/api/admin/users", {
+    api.get("/admin/users", {  // ✅ api 인스턴스 사용
       params: { searchType, keyword: "", sortBy }
     })
       .then(res => {
@@ -77,7 +77,7 @@ export default function Adminpage() {
 
   // ── 검색 처리 ─────────────────────────────────────────────────────────
   const handleSearch = () => {
-    axios.get("/api/admin/users", {
+    api.get("/admin/users", {  // ✅ api 인스턴스 사용
       params: { searchType, keyword, sortBy }
     })
       .then(res => {
@@ -97,12 +97,16 @@ export default function Adminpage() {
     setSelectedUserId(null);
   };
   const handleConfirmDelete = () => {
+    console.log(selectedUserId);
     if (selectedUserId !== null) {
-      axios.delete(`/api/admin/users/${selectedUserId}`)
-        .then(() => {
+      api.delete(`/admin/users/${selectedUserId}`) // ✅ 올바른 엔드포인트 + api 인스턴스
+        .then(res => {
+          alert(res.data.message || "사용자 삭제 완료");
           setUsers(prev => prev.filter(u => u.userId !== selectedUserId));
         })
-        .catch(console.error)
+        .catch(err => {
+          alert(err.response?.data.message || "삭제 실패");
+        })
         .finally(() => handleCloseDialog());
     }
   };
@@ -205,10 +209,10 @@ export default function Adminpage() {
                 <TableCell align="center">
                   {/* 삭제 아이콘 클릭 시 모달 열기 */}
                   <IconButton
-                    color="error"
-                    onClick={() => handleOpenDialog(u.userId)}
-                  >
-                    <DeleteIcon />
+                  color="error"
+                  onClick={() => handleOpenDialog(u.userId)}
+                  disabled={u.role === "ADMIN"}> 
+                  <DeleteIcon />
                   </IconButton>
                 </TableCell>
               </TableRow>

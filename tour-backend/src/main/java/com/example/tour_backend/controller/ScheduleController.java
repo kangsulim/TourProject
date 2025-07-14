@@ -1,9 +1,5 @@
 package com.example.tour_backend.controller;
 
-/*
-// DEPRECATED: Schedule 기능은 Tour JSON plan_data로 통합되었습니다.
-// 이 컨트롤러는 더 이상 사용되지 않습니다.
-
 import com.example.tour_backend.domain.schedule.Schedule;
 import com.example.tour_backend.domain.tour.TourRepository;
 import com.example.tour_backend.domain.schedule.ScheduleRepository;
@@ -22,6 +18,42 @@ public class ScheduleController {
     private final ScheduleRepository scheduleRepository;
     private final TourRepository tourRepository;
 
-    // ... 모든 메소드들 ...
+    @GetMapping
+    public List<Schedule> getAll() {
+        return scheduleRepository.findAll();
+    }
+
+    @GetMapping("/{id}")
+    public Schedule getById(@PathVariable Long id) {
+        return scheduleRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Schedule not found"));
+    }
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public Schedule create(@RequestBody Schedule schedule) {
+        Timestamp now = new Timestamp(System.currentTimeMillis());
+        schedule.setCreateDate(now.toLocalDateTime());
+        schedule.setModifiedDate(now.toLocalDateTime());
+        return scheduleRepository.save(schedule);
+    }
+
+    @PutMapping("/{id}")
+    public Schedule update(@PathVariable Long id, @RequestBody Schedule updated) {
+        return scheduleRepository.findById(id).map(s -> {
+            s.setScheduleTitle(updated.getScheduleTitle());
+            s.setContent(updated.getContent());
+            s.setDate(updated.getDate());
+            s.setStartTime(updated.getStartTime());
+            s.setEndTime(updated.getEndTime());
+            s.setModifiedDate(new Timestamp(System.currentTimeMillis()).toLocalDateTime());
+            return scheduleRepository.save(s);
+        }).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Schedule not found"));
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable Long id) {
+        scheduleRepository.deleteById(id);
+    }
 }
-*/

@@ -1,9 +1,5 @@
 package com.example.tour_backend.controller;
 
-/*
-// DEPRECATED: Traffic 기능은 Tour JSON plan_data로 통합되었습니다.
-// 이 컨트롤러는 더 이상 사용되지 않습니다.
-
 import com.example.tour_backend.domain.traffic.Traffic;
 import com.example.tour_backend.domain.traffic.TrafficRepository;
 import lombok.RequiredArgsConstructor;
@@ -18,8 +14,43 @@ import java.util.List;
 @RequestMapping("/api/traffics")
 @RequiredArgsConstructor
 public class TrafficController {
+
     private final TrafficRepository trafficRepository;
 
-    // ... 모든 메소드들 ...
+    @GetMapping
+    public List<Traffic> getAll() {
+        return trafficRepository.findAll();
+    }
+
+    @GetMapping("/{id}")
+    public Traffic getById(@PathVariable Long id) {
+        return trafficRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Traffic not found"));
+    }
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public Traffic create(@RequestBody Traffic traffic) {
+//        Timestamp now = new Timestamp(System.currentTimeMillis());
+//        traffic.setCreateDate(now);
+//        traffic.setModifiedDate(now);
+        return trafficRepository.save(traffic);
+    }
+
+    @PutMapping("/{id}")
+    public Traffic update(@PathVariable Long id, @RequestBody Traffic updated) {
+        return trafficRepository.findById(id).map(t -> {
+            t.setVehicle(updated.getVehicle());
+            t.setSpendTime(updated.getSpendTime());
+            t.setPrice(updated.getPrice());
+//            t.setModifiedDate(new Timestamp(System.currentTimeMillis()));
+            return trafficRepository.save(t);
+        }).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Traffic not found"));
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable Long id) {
+        trafficRepository.deleteById(id);
+    }
 }
-*/
