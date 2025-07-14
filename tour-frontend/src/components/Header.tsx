@@ -14,7 +14,7 @@ export const Header: React.FC = () => {
     throw new Error('Header must be used within an AuthProvider');
   }
 
-  const { isAuthenticated } = authContext; // 로그인 상태
+  const { isAuthenticated, user} = authContext; // 로그인 상태
   // 로그인 & 회원가입 모달 상태 관리
   const [openLoginModal, setOpenLoginModal] = useState(false);
   const [openSignupModal, setOpenSignupModal] = useState(false);
@@ -65,7 +65,10 @@ export const Header: React.FC = () => {
           <Link to="/tour-list" style={{ textDecoration: "none", color: "#333", fontSize: "1.1rem", fontWeight: "500" }}>나의 여행</Link>
           <Link to="/thread" style={{ textDecoration: "none", color: "#333", fontSize: "1.1rem", fontWeight: "500" }}>여행 게시판</Link>
           <Link to="/mypage" style={{ textDecoration: "none", color: "#333", fontSize: "1.1rem", fontWeight: "500" }}>마이페이지</Link>
-          <Link to="/adminpage" style={{ textDecoration: "none", color: "#333", fontSize: "1.1rem", fontWeight: "500" }}>관리자 페이지</Link>
+          {/* 👇 관리자일 때만 보여줌 */}
+          {user?.role === 'ADMIN' && (
+            <Link to="/adminpage" style={{ textDecoration: "none", color: "#333", fontSize: "1.1rem", fontWeight: "500" }}>관리자 페이지</Link>
+          )}
         </nav>
  {/*  로그인/로그아웃 버튼 영역 */}
         <div className="auth-buttons">

@@ -7,11 +7,8 @@ import CssBaseline from '@mui/material/CssBaseline';
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import MainPage from "./pages/mainpage/mainpage";
 import Tour from "./pages/Tours/Tours";
-<<<<<<< HEAD
 import TourList from "./pages/TourList/TourList";
 // import Traffic from "./pages/Traffic/Traffic";
-=======
->>>>>>> 6a7022887a79a5c94818804f7e48ddcc2fb69080
 import ThreadList from './pages/Threads/ThreadList';
 import ThreadCreate from './pages/Threads/ThreadCreate';
 import ThreadDetail from './pages/Threads/ThreadDetail';

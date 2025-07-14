@@ -2,14 +2,15 @@ import { createContext } from 'react';
 
 
 // 로그인한 사용자 정보를 담을 User 타입 정의
-interface User {
+export interface User {
   userId: number;      // 사용자 고유 ID
   username: string;    // 사용자 이름 (닉네임 등)
+  role: 'USER' | 'ADMIN'; 
   // 필요에 따라 이메일 등 추가 가능
 }
 
 // AuthContext가 제공할 타입 정의
-interface AuthContextType {
+export interface AuthContextType {
   token: string | null;          // 현재 로그인 토큰 (없으면 null)
   user: User | null;                   // 로그인한 사용자 정보 (없으면 null)
   login: (token: string,  user: User) => void;  // 로그인 처리 함수 (토큰 저장 및 상태 변경)
