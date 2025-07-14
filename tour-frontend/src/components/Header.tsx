@@ -61,7 +61,8 @@ export const Header: React.FC = () => {
    {/* 🔹 네비게이션 메뉴 */}
         <nav style={{ display: "flex", gap: "32px", alignItems: "center" }}>
           <Link to="/" style={{ textDecoration: "none", color: "#333", fontSize: "1.1rem", fontWeight: "500" }}>홈</Link>
-          <Link to="/plan" style={{ textDecoration: "none", color: "#333", fontSize: "1.1rem", fontWeight: "500" }}>여행 계획</Link>
+          <Link to="/tours" style={{ textDecoration: "none", color: "#333", fontSize: "1.1rem", fontWeight: "500" }}>여행 계획</Link>
+          <Link to="/tour-list" style={{ textDecoration: "none", color: "#333", fontSize: "1.1rem", fontWeight: "500" }}>나의 여행</Link>
           <Link to="/thread" style={{ textDecoration: "none", color: "#333", fontSize: "1.1rem", fontWeight: "500" }}>여행 게시판</Link>
           <Link to="/mypage" style={{ textDecoration: "none", color: "#333", fontSize: "1.1rem", fontWeight: "500" }}>마이페이지</Link>
           <Link to="/adminpage" style={{ textDecoration: "none", color: "#333", fontSize: "1.1rem", fontWeight: "500" }}>관리자 페이지</Link>

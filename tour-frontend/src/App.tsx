@@ -7,6 +7,7 @@ import CssBaseline from '@mui/material/CssBaseline';
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import MainPage from "./pages/mainpage/mainpage";
 import Tour from "./pages/Tours/Tours";
+import TourList from "./pages/TourList/TourList";
 // import Traffic from "./pages/Traffic/Traffic";
 import ThreadList from './pages/Threads/ThreadList';
 import ThreadCreate from './pages/Threads/ThreadCreate';
@@ -63,6 +64,16 @@ export default function App() {
               }}>
                 <Routes>
                   <Route path="/" element={<MainPage />} />
+                  <Route path="/tours" element={
+                    <ProtectedRoute>
+                      <Tour />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/tour-list" element={
+                    <ProtectedRoute>
+                      <TourList />
+                    </ProtectedRoute>
+                  } />
                   <Route path="/plan" element={
                     <ProtectedRoute>
                       <Tour />
