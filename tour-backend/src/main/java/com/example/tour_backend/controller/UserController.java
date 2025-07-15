@@ -1,5 +1,6 @@
 package com.example.tour_backend.controller;
 
+import com.example.tour_backend.dto.thread.ThreadDto;
 import com.example.tour_backend.dto.user.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -90,5 +91,11 @@ public class UserController {
     public ResponseEntity<String> deleteUser(@PathVariable Long userId) {
         userService.deleteUser(userId);
         return ResponseEntity.ok("사용자 삭제 완료");
+    }
+
+    // 좋아요 누른 게시글 보여주기
+    @GetMapping("/{userId}/liked-threads")
+    public List<ThreadDto> getLikedThreads(@PathVariable Long userId) {
+        return userService.getLikedThreadsByUser(userId);
     }
 }

@@ -1,6 +1,7 @@
 // axios 인스턴스를 불러옴. baseURL 설정되어 있음 (예: http://localhost:8080)
 import api from './api';
 import {  UserUpdateRequest, LoginRequest, SignupRequest, UserResponse, JwtResponse, User } from '../types/user';
+import { Thread } from '../types/thread'; // 타입도 경로 맞게!
 // .d.ts는 타입만 정의하는 파일임을 나타내는 확장자.여기 user는 파일명에서 .d.ts 확장자를 빼고 쓴거
 
 
@@ -55,3 +56,8 @@ export const getUserss = async (): Promise<User[]> => {
   const response = await api.get('/users');
   return response.data;
 };
+
+export async function getLikedThreads(userId: number): Promise<Thread[]> {
+  const res = await api.get(`/users/${userId}/liked-threads`);
+  return res.data;
+}

@@ -26,6 +26,18 @@ import { AuthContext } from '../../context/AuthContext'; // 로그인 정보 받
 import { useNavigate } from 'react-router-dom';
 // MUI에서 공식 문서에 나오는 Pagination 컴포넌트 가져오기
 
+function applySort(threads: Thread[], sortBy: 'createDate' | 'views' | 'likes') {
+  const  sorted = threads.slice();
+  if (sortBy === 'createDate') {
+    sorted.sort((a, b) => new Date(b.createDate).getTime() - new Date(a.createDate).getTime());
+  } else if (sortBy === 'views') {
+    sorted.sort((a, b) => b.count - a.count);
+  } else if (sortBy === 'likes') {
+    sorted.sort((a, b) => b.heart - a.heart);
+  }
+  return sorted;
+}
+
 const ThreadList = () => {
   // 전체 게시글 목록을 담는 상태, 초기값은 빈 배열
   const [threads, setThreads] = useState<Thread[]>([]);
@@ -35,6 +47,8 @@ const ThreadList = () => {
   const [searchType, setSearchType] = useState<'author' | 'title_content'>('title_content'); 
   // 정렬 기준
   const [sortBy, setSortBy] = useState<'createDate' | 'views' | 'likes'>('createDate');
+  
+
 
   // 현재 페이지 번호 상태 저장 (초기값: 1페이지)
   const [currentPage, setCurrentPage] = useState(1);
@@ -74,13 +88,17 @@ const ThreadList = () => {
       }
     };
 
-   // 전체 페이지 수 계산 (총 글 수 ÷ 페이지당 글 수)
-   const totalPages = Math.ceil(threads.length / threadsPerPage);
+  // 전체 페이지 수 계산 (총 글 수 ÷ 페이지당 글 수)
+  const totalPages = Math.ceil(threads.length / threadsPerPage);
 
-   // 현재 페이지에서 보여줄 게시글만 잘라내기
+  // 전체 글을 정렬 기준에 맞게 정렬
+const sortedThreads = applySort(threads, sortBy);
+
+
+  // 현재 페이지에서 보여줄 게시글만 잘라내기
   const startIdx = (currentPage - 1) * threadsPerPage;
   const endIdx = startIdx + threadsPerPage;
-  const currentThreads = threads.slice(startIdx, endIdx);
+  const currentThreads = sortedThreads.slice(startIdx, endIdx);
 
   // 게시글 제목을 클릭하면 해당 게시글 상세 페이지로 이동하는 함수
   const handleTitleClick = (threadId: number) => {

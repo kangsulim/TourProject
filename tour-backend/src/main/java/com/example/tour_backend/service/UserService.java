@@ -2,8 +2,11 @@ package com.example.tour_backend.service;
 
 import com.example.tour_backend.config.JwtTokenProvider;
 import com.example.tour_backend.domain.Role;
+import com.example.tour_backend.domain.thread.Thread;
+import com.example.tour_backend.domain.thread.ThreadLikeRepository;
 import com.example.tour_backend.domain.user.User;
 import com.example.tour_backend.domain.user.UserRepository;
+import com.example.tour_backend.dto.thread.ThreadDto;
 import com.example.tour_backend.dto.user.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -21,6 +24,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;      // 비밀번호 암호화 검증용
     private final JwtTokenProvider jwtTokenProvider;    // JWT 토큰 생성용 클래스 (직접 구현 필요)
+    private final ThreadLikeRepository threadLikeRepository;
 
     /**
      * 로그인 처리
@@ -184,6 +188,10 @@ public class UserService {
 
         // ✅ 연관 데이터 전부 삭제 (Cascade 설정 덕분에 JPA가 알아서 처리)
         userRepository.delete(user);
+    }
+    public List<ThreadDto> getLikedThreadsByUser(Long userId) {
+        List<Thread> threads = threadLikeRepository.findThreadsByUserId(userId);
+        return threads.stream().map(ThreadDto::from).collect(Collectors.toList());
     }
 
 }

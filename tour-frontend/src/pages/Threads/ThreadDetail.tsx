@@ -144,7 +144,7 @@ const ThreadDetail = () => {
 
   // ---------------------- [렌더링 영역] ----------------------
   return (
-    <Box sx={{ width: '100%', maxWidth: '1100px', mx: 'auto', mt: 7, mb: 7, p: 5, bgcolor: 'white', borderRadius: 4, boxShadow: 5 }}>
+    <Box sx={{ width: '100%', maxWidth: '900px', mx: 'auto', mt: 7, mb: 7, p: 5, bgcolor: 'white', borderRadius: 4, boxShadow: 5 }}>
       {!isEditing ? (
         <>
           <Typography variant="h3" fontWeight={700} color="primary.main" gutterBottom>{thread.title}</Typography>

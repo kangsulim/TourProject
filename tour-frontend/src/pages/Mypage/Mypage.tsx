@@ -17,6 +17,9 @@ import {
 import { UserResponse, UserUpdateRequest } from '../../types/user';
 import { AuthContext } from '../../context/AuthContext';
 import { CenterFocusStrong } from '@mui/icons-material';
+import { getLikedThreads } from '../../services/userApi';
+import { Thread } from '../../types/thread';
+import { useNavigate } from 'react-router-dom';
 
 const Mypage = () => {
   const { token } = useContext(AuthContext);
@@ -26,6 +29,20 @@ const Mypage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  // 좋아요 누른 게시글 리스트 뽑아오기
+  const [likedThreads, setLikedThreads] = useState<Thread[]>([]);
+  const [likedLoading, setLikedLoading] = useState(true);
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (user) {
+      setLikedLoading(true);
+      getLikedThreads(user.userId)
+        .then(setLikedThreads)
+        .catch(() => setLikedThreads([]))
+        .finally(() => setLikedLoading(false));
+    }
+  }, [user]);
+
   const [form, setForm] = useState<UserUpdateRequest>({
     username: '',
     name: '',
@@ -34,6 +51,7 @@ const Mypage = () => {
     nickname: '',
     password: '',
   });
+
 
   useEffect(() => {
     if (!token) return;
@@ -209,7 +227,6 @@ const Mypage = () => {
                 fullWidth
                 size="medium"
               />
-
               <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
                 <Button
                   variant="contained"
@@ -232,6 +249,47 @@ const Mypage = () => {
           </Box>
         )}
       </Paper>
+      <Divider sx={{ my: 4 }} />
+      <Typography variant="h5" fontWeight={600} gutterBottom>
+        내가 좋아요 누른 게시글
+      </Typography>
+      
+      {likedLoading ? (
+        <CircularProgress />
+      ) : likedThreads.length === 0 ? (
+        <Typography color="text.secondary">
+          아직 좋아요 누른 게시글이 없습니다.
+        </Typography>
+      ) : (
+        <Stack spacing={2}>
+        {likedThreads.map((thread) => (
+          <Paper
+            key={thread.threadId}
+            sx={{
+              p: 2,
+              borderRadius: 2,
+              boxShadow: 1,
+              cursor: 'pointer',           // 마우스 올리면 손가락
+              transition: 'box-shadow 0.2s',
+              '&:hover': { boxShadow: 6 }, // 호버시 더 진하게
+            }}
+            onClick={() => navigate(`/thread/${thread.threadId}`)}  // 상세페이지로 이동!
+          >
+            <Typography variant="subtitle1" fontWeight={700}>
+              {thread.title}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {thread.author} | {thread.createDate?.substring(0, 10)}
+            </Typography>
+            <Typography variant="body2" sx={{ mt: 1, mb: 0.5 }}>
+              {thread.content?.slice(0, 60) || ''}
+            </Typography>
+          </Paper>
+        ))}
+      </Stack>
+      
+)}
+
     </Box>
   );
 };
