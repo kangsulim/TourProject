@@ -8,6 +8,7 @@ export interface RouteRequest {
   departure: LocationData;
   destination: LocationData;
   departureTime?: Date;
+  arrivalTime?: Date; // 도착 시간 옵션 추가
   travelMode?: google.maps.TravelMode;
 }
 
@@ -28,33 +29,58 @@ export const searchTransitRoutes = async (request: RouteRequest): Promise<RouteR
   return new Promise((resolve, reject) => {
     const directionsService = new google.maps.DirectionsService();
     
+    // 현재 위치 판별 (placeId가 'current_location_'로 시작하는 경우)
+    const isDepartureCurrentLocation = request.departure.placeId.startsWith('current_location_');
+    const isDestinationCurrentLocation = request.destination.placeId.startsWith('current_location_');
+    
+    // origin 설정: 현재 위치면 좌표, 아니면 placeId 사용
+    const origin = isDepartureCurrentLocation 
+      ? { lat: request.departure.coordinates.lat, lng: request.departure.coordinates.lng }
+      : { placeId: request.departure.placeId };
+      
+    // destination 설정: 현재 위치면 좌표, 아니면 placeId 사용  
+    const destination = isDestinationCurrentLocation
+      ? { lat: request.destination.coordinates.lat, lng: request.destination.coordinates.lng }
+      : { placeId: request.destination.placeId };
+    
     const directionsRequest: google.maps.DirectionsRequest = {
-      // placeId 사용으로 정확한 위치 지정
-      origin: { placeId: request.departure.placeId },
-      destination: { placeId: request.destination.placeId },
+      origin,
+      destination,
       
       // 대중교통 모드만 사용
       travelMode: google.maps.TravelMode.TRANSIT,
       
       // 대중교통 옵션
       transitOptions: {
-        departureTime: request.departureTime || new Date(),
+        // 도착 시간이 지정된 경우 arrivalTime 사용, 그렇지 않으면 departureTime 사용
+        ...(request.arrivalTime 
+          ? { arrivalTime: request.arrivalTime }
+          : { departureTime: request.departureTime || new Date() }
+        ),
         modes: [
           google.maps.TransitMode.BUS,
           google.maps.TransitMode.SUBWAY,
           google.maps.TransitMode.TRAIN
         ],
-        routingPreference: google.maps.TransitRoutePreference.BEST_GUESS
+        routingPreference: google.maps.TransitRoutePreference.FEWER_TRANSFERS
       },
       
       // 여러 경로 옵션 요청
       provideRouteAlternatives: true
     };
 
+    console.log('Directions 요청:', {
+      origin,
+      destination,
+      isDepartureCurrentLocation,
+      isDestinationCurrentLocation
+    });
+
     directionsService.route(directionsRequest, (result, status) => {
       if (status === google.maps.DirectionsStatus.OK && result) {
         try {
           const routes = parseDirectionsResult(result, request);
+          console.log('길찾기 성공:', routes);
           resolve(routes);
         } catch (error) {
           console.error('경로 파싱 오류:', error);

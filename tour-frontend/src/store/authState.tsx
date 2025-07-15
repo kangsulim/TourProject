@@ -20,9 +20,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
 
   // 로그인하지 않았다면 로그인 페이지로 리디렉션
   if (!isAuthenticated) {
-    return (
-      <Navigate to="/" replace />
-    )
+    return <Navigate to="/" replace />;
     // replace: 히스토리에 로그인 전 페이지를 남기지 않음 (뒤로 가기 방지)
   }
 

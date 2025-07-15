@@ -15,6 +15,19 @@ import { GooglePlaceResult } from '../types/googleMaps';
 import { convertTourToBackendFormat, convertTourFromBackendFormat } from '../utils/tourDataConverter';
 import { tourAPI } from '../services/tourApi';
 
+// 날짜 범위 생성 유틸리티 함수
+const generateDateRange = (startDate: string, endDate: string): string[] => {
+  const dates: string[] = [];
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+    dates.push(d.toISOString().split('T')[0]);
+  }
+  
+  return dates;
+};
+
 interface TravelState {
   // 현재 여행 정보
   currentTour: TourType | null;
@@ -24,10 +37,16 @@ interface TravelState {
   mapEntities: MapEntityType[];
   trafficData: TrafficType[];
   
+  // 날짜 기반 탭 관리 (새로 추가)
+  availableDates: string[]; // 시작일~종료일 범위의 모든 날짜
+  selectedDate: string; // 현재 선택된 날짜
+  
   // 지도 관련
   selectedLocation: GooglePlaceResult | null;
   routeResults: RouteResult[];
   isRoutePanelOpen: boolean;
+  // 지도 포커스 제어 (새로 추가)
+  mapFocusLocation: LocationData | null; // 지도에서 포커스할 위치
   
   // 날씨 정보
   weatherData: WeatherType[];
@@ -45,10 +64,16 @@ interface TravelActions {
   clearCurrentTour: () => void;
   resetTourInfo: () => void;
   
+  // 날짜 기반 탭 관리 (새로 추가)
+  generateAvailableDates: () => void; // 시작일~종료일 범위 날짜 생성
+  setSelectedDate: (date: string) => void;
+  addNextDate: () => void; // 다음 날짜 추가
+  
   // Schedule 관련 액션
   addSchedule: (schedule: Omit<ScheduleType, 'scheduleId'>) => void;
   updateSchedule: (scheduleId: number, updates: Partial<ScheduleType>) => void;
   removeSchedule: (scheduleId: number) => void;
+  reorderSchedules: (date: string, reorderedSchedules: ScheduleType[]) => void; // 드래그앤드롭용
   
   // MapEntity 관련 액션
   addLocationToSchedule: (location: LocationData, scheduleData?: Partial<ScheduleType>) => void;
@@ -64,6 +89,9 @@ interface TravelActions {
   setRouteResults: (results: RouteResult[]) => void;
   toggleRoutePanel: () => void;
   setRoutePanelOpen: (isOpen: boolean) => void;
+  // 지도 위치 제어 (새로 추가)
+  focusMapOnLocation: (location: LocationData) => void;
+  clearMapFocus: () => void;
   
   // 날씨 관련 액션
   setWeatherData: (weatherData: WeatherType[]) => void;
@@ -237,9 +265,14 @@ const initialState: TravelState = {
   schedules: [],
   mapEntities: [],
   trafficData: [],
+  // 날짜 관리 초기화
+  availableDates: [],
+  selectedDate: new Date().toISOString().split('T')[0],
   selectedLocation: null,
   routeResults: [],
   isRoutePanelOpen: false,
+  // 지도 포커스 초기화
+  mapFocusLocation: null,
   weatherData: [],
   selectedDayIndex: 0,
   isLoading: false,
@@ -258,8 +291,8 @@ export const useTravelStore = create<TravelState & TravelActions>()(
 
       updateTourInfo: (tourInfo) =>
         set(
-          (state) => ({
-            currentTour: state.currentTour
+          (state) => {
+            const updatedTour = state.currentTour
               ? { ...state.currentTour, ...tourInfo }
               : { 
                   title: '',
@@ -268,8 +301,31 @@ export const useTravelStore = create<TravelState & TravelActions>()(
                   travelers: 2,
                   budget: 'medium' as const,
                   ...tourInfo 
+                };
+            
+            // 날짜 변경 시 자동으로 사용 가능한 날짜 업데이트
+            let newAvailableDates = state.availableDates;
+            let newSelectedDate = state.selectedDate;
+            
+            if (tourInfo.startDate || tourInfo.endDate) {
+              const startDate = tourInfo.startDate || updatedTour.startDate;
+              const endDate = tourInfo.endDate || updatedTour.endDate;
+              
+              if (startDate && endDate && startDate <= endDate) {
+                newAvailableDates = generateDateRange(startDate, endDate);
+                // 현재 선택된 날짜가 새 범위에 없으면 첫 번째 날짜로 설정
+                if (!newAvailableDates.includes(newSelectedDate)) {
+                  newSelectedDate = newAvailableDates[0] || new Date().toISOString().split('T')[0];
                 }
-          }),
+              }
+            }
+            
+            return {
+              currentTour: updatedTour,
+              availableDates: newAvailableDates,
+              selectedDate: newSelectedDate
+            };
+          },
           false,
           'updateTourInfo'
         ),
@@ -285,19 +341,93 @@ export const useTravelStore = create<TravelState & TravelActions>()(
             endDate: '',
             travelers: 2,
             budget: 'medium'
-          } 
+          },
+          availableDates: [],
+          selectedDate: new Date().toISOString().split('T')[0]
         }, false, 'resetTourInfo'),
+
+      // 날짜 기반 탭 관리 액션들
+      generateAvailableDates: () =>
+        set(
+          (state) => {
+            if (!state.currentTour?.startDate || !state.currentTour?.endDate) {
+              return { availableDates: [] };
+            }
+            
+            const dates = generateDateRange(state.currentTour.startDate, state.currentTour.endDate);
+            const newSelectedDate = dates.includes(state.selectedDate) 
+              ? state.selectedDate 
+              : dates[0] || new Date().toISOString().split('T')[0];
+              
+            return {
+              availableDates: dates,
+              selectedDate: newSelectedDate
+            };
+          },
+          false,
+          'generateAvailableDates'
+        ),
+
+      setSelectedDate: (date) =>
+        set({ selectedDate: date }, false, 'setSelectedDate'),
+
+      addNextDate: () =>
+        set(
+          (state) => {
+            if (!state.currentTour?.startDate || !state.currentTour?.endDate) {
+              return {}; // 아무 변경 없음
+            }
+            
+            const currentDates = state.availableDates;
+            const endDate = new Date(state.currentTour.endDate);
+            
+            if (currentDates.length === 0) {
+              // 첫 번째 날짜 추가: 시작일
+              const newDate = state.currentTour.startDate;
+              return {
+                availableDates: [newDate],
+                selectedDate: newDate
+              };
+            }
+            
+            // 마지막 날짜 다음 날 추가
+            const lastDate = new Date(currentDates[currentDates.length - 1]);
+            const nextDay = new Date(lastDate);
+            nextDay.setDate(nextDay.getDate() + 1);
+            
+            // 종료일을 초과하지 않는 경우만 추가
+            if (nextDay <= endDate) {
+              const newDateStr = nextDay.toISOString().split('T')[0];
+              return {
+                availableDates: [...currentDates, newDateStr],
+                selectedDate: newDateStr
+              };
+            }
+            
+            return {}; // 더 이상 추가할 수 없음
+          },
+          false,
+          'addNextDate'
+        ),
 
       // Schedule 관련 액션
       addSchedule: (schedule) => {
-        const newSchedule: ScheduleType = {
-          ...schedule,
-          scheduleId: Date.now(), // 임시 ID, 실제로는 서버에서 받아옴
-        };
         set(
-          (state) => ({
-            schedules: [...state.schedules, newSchedule],
-          }),
+          (state) => {
+            // 해당 날짜의 기존 일정 개수를 확인하여 order 값 설정
+            const sameDateSchedules = state.schedules.filter(s => s.date === schedule.date);
+            const nextOrder = sameDateSchedules.length;
+            
+            const newSchedule: ScheduleType = {
+              ...schedule,
+              scheduleId: Date.now(), // 임시 ID, 실제로는 서버에서 받아옴
+              order: nextOrder // 마지막 순서로 추가
+            };
+            
+            return {
+              schedules: [...state.schedules, newSchedule],
+            };
+          },
           false,
           'addSchedule'
         );
@@ -330,9 +460,26 @@ export const useTravelStore = create<TravelState & TravelActions>()(
           'removeSchedule'
         ),
 
+      // 드래그앤드롭으로 일정 순서 변경
+      reorderSchedules: (date, reorderedSchedules) =>
+        set(
+          (state) => {
+            // 다른 날짜의 일정은 유지하고, 해당 날짜의 일정만 교체
+            const otherDateSchedules = state.schedules.filter(
+              (schedule) => schedule.date !== date
+            );
+            
+            return {
+              schedules: [...otherDateSchedules, ...reorderedSchedules]
+            };
+          },
+          false,
+          'reorderSchedules'
+        ),
+
       // MapEntity 관련 액션
       addLocationToSchedule: (location, scheduleData = {}) => {
-        let { currentTour } = get();
+        let { currentTour, selectedDate, schedules } = get();
         
         // currentTour가 없으면 기본 투어 생성
         if (!currentTour) {
@@ -352,21 +499,24 @@ export const useTravelStore = create<TravelState & TravelActions>()(
           console.log('기본 투어 자동 생성:', defaultTour);
         }
 
-        // 기본 시간 설정 (2시간)
+        // 기본 시간 설정 (현재 시각기준)
         const now = new Date();
         const defaultStartTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-        const endTime = new Date(now.getTime() + 2 * 60 * 60 * 1000);
-        const defaultEndTime = `${endTime.getHours().toString().padStart(2, '0')}:${endTime.getMinutes().toString().padStart(2, '0')}`;
+        
+        // 해당 날짜의 기존 일정 개수를 확인하여 order 값 설정
+        const sameDateSchedules = schedules.filter(s => s.date === selectedDate);
+        const nextOrder = sameDateSchedules.length;
 
-        // Schedule 생성
+        // Schedule 생성 - 선택된 날짜 기준
         const newSchedule: ScheduleType = {
           scheduleId: Date.now(),
           tourId: currentTour.tourId!,
           scheduleTitle: location.name,
           content: location.address,
-          date: new Date().toISOString().split('T')[0],
-          startTime: defaultStartTime,
-          endTime: defaultEndTime,
+          date: selectedDate, // 현재 선택된 날짜 사용
+          startTime: defaultStartTime, // 시작시간만 저장
+          endTime: '', // 사용하지 않음
+          order: nextOrder, // 마지막 순서로 추가
           ...scheduleData,
         };
 
@@ -415,7 +565,7 @@ export const useTravelStore = create<TravelState & TravelActions>()(
 
       // Traffic 관련 액션
       addRouteToSchedule: (route, scheduleData = {}) => {
-        let { currentTour } = get();
+        let { currentTour, selectedDate, schedules } = get();
         
         // currentTour가 없으면 기본 투어 생성
         if (!currentTour) {
@@ -423,27 +573,31 @@ export const useTravelStore = create<TravelState & TravelActions>()(
             tourId: Date.now(),
             title: "나의 여행 계획",
             startDate: new Date().toISOString().split('T')[0],
-            endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 7일 후
+            endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
             travelers: 2,
             budget: 'medium'
           };
           
-          // 기본 투어 설정
           set({ currentTour: defaultTour }, false, 'setDefaultTour');
           currentTour = defaultTour;
           
           console.log('기본 투어 자동 생성 (교통편):', defaultTour);
         }
+        
+        // 해당 날짜의 기존 일정 개수를 확인하여 order 값 설정
+        const sameDateSchedules = schedules.filter(s => s.date === selectedDate);
+        const nextOrder = sameDateSchedules.length;
 
-        // Schedule 생성
+        // Schedule 생성 - 선택된 날짜 기준
         const newSchedule: ScheduleType = {
           scheduleId: Date.now(),
           tourId: currentTour.tourId!,
-          scheduleTitle: `${route.departure} → ${route.destination}`,
+          scheduleTitle: `🚇 ${route.departure} → ${route.destination}`,
           content: `${route.duration}분 소요, 환승 ${route.transfers}회`,
-          date: new Date().toISOString().split('T')[0],
+          date: selectedDate,
           startTime: route.departureTime,
-          endTime: route.arrivalTime,
+          endTime: '',
+          order: nextOrder, // 마지막 순서로 추가
           ...scheduleData,
         };
 
@@ -508,6 +662,13 @@ export const useTravelStore = create<TravelState & TravelActions>()(
 
       setRoutePanelOpen: (isOpen) =>
         set({ isRoutePanelOpen: isOpen }, false, 'setRoutePanelOpen'),
+
+      // 지도 포커스 제어 액션들
+      focusMapOnLocation: (location) =>
+        set({ mapFocusLocation: location }, false, 'focusMapOnLocation'),
+
+      clearMapFocus: () =>
+        set({ mapFocusLocation: null }, false, 'clearMapFocus'),
 
       // 날씨 관련 액션
       setWeatherData: (weatherData) =>
@@ -783,9 +944,14 @@ export const useTravelActions = () => {
     updateTourInfo: store.updateTourInfo,
     clearCurrentTour: store.clearCurrentTour,
     resetTourInfo: store.resetTourInfo,
+    // 날짜 관리 액션들
+    generateAvailableDates: store.generateAvailableDates,
+    setSelectedDate: store.setSelectedDate,
+    addNextDate: store.addNextDate,
     addSchedule: store.addSchedule,
     updateSchedule: store.updateSchedule,
     removeSchedule: store.removeSchedule,
+    reorderSchedules: store.reorderSchedules,
     addLocationToSchedule: store.addLocationToSchedule,
     removeMapEntity: store.removeMapEntity,
     updateMapEntity: store.updateMapEntity,
@@ -795,6 +961,9 @@ export const useTravelActions = () => {
     setRouteResults: store.setRouteResults,
     toggleRoutePanel: store.toggleRoutePanel,
     setRoutePanelOpen: store.setRoutePanelOpen,
+    // 지도 포커스 제어
+    focusMapOnLocation: store.focusMapOnLocation,
+    clearMapFocus: store.clearMapFocus,
     setWeatherData: store.setWeatherData,
     setSelectedDayIndex: store.setSelectedDayIndex,
     setLoading: store.setLoading,
@@ -817,9 +986,14 @@ export const useTravelState = () => {
     schedules: store.schedules,
     mapEntities: store.mapEntities,
     trafficData: store.trafficData,
+    // 날짜 관리 상태
+    availableDates: store.availableDates,
+    selectedDate: store.selectedDate,
     selectedLocation: store.selectedLocation,
     routeResults: store.routeResults,
     isRoutePanelOpen: store.isRoutePanelOpen,
+    // 지도 포커스 상태
+    mapFocusLocation: store.mapFocusLocation,
     weatherData: store.weatherData,
     selectedDayIndex: store.selectedDayIndex,
     isLoading: store.isLoading,

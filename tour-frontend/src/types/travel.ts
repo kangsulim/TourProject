@@ -83,6 +83,8 @@ export interface ScheduleType {
   date: string;
   startTime: string;
   endTime: string;
+  memo?: string; // 사용자 메모 추가
+  order?: number; // 드래그앤드롭 순서 관리용
 }
 
 // 프론트엔드에서만 사용하는 MapEntity 타입 (레거시 호환)
