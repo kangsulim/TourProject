@@ -13,6 +13,20 @@ export const createThread = async (thread: ThreadRequest): Promise<Thread> => {
   return response.data;
 };
 
+/** 파일 업로드 */
+export const uploadFile = async (file: File): Promise<string> => {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  // ApiResponse<string> 대신 string 타입으로 받기
+  const response = await api.post<string>('/thread/upload', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+
+  return response.data; // 파일 URL이 바로 data에 있음
+};
+
+
 /** 게시글 상세 조회 (Id로 조회하는거임) */
 // export const getThreadById = async (threadId: number): Promise<Thread> => {
 //   const response = await api.get(`/thread/${threadId}`);

@@ -28,71 +28,38 @@ public class ThreadService {
     private final UserRepository userRepository;
     private final ThreadLikeRepository threadLikeRepository; //(수정함)
 
-    @Transactional //게시글 생성
-    public ThreadDto createThread(ThreadDto dto) {
-        User user = userRepository.findById(dto.getUserId())
+    @Transactional //게시글 생성 파일 업로드 추가
+    public ThreadDto createThread(ThreadUpdateRequestDto requestDto) {
+        User user = userRepository.findById(requestDto.getUserId())
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 사용자입니다."));
 
         Thread thread = Thread.builder()
                 .user(user)
-                .title(dto.getTitle())
-                .content(dto.getContent())
-                .author(dto.getAuthor())
-                .pdfPath(dto.getPdfPath())
-                .area(dto.getArea())
+                .title(requestDto.getTitle())
+                .content(requestDto.getContent())
+                .author(requestDto.getAuthor())
+                .filePath(requestDto.getFilePath())  // 파일업로드
+                .area(requestDto.getArea())
                 .build();
 
         threadRepository.save(thread);
 
-        dto.setThreadId(thread.getThreadId());
-        dto.setCount(thread.getCount());
-        dto.setHeart(thread.getHeart());
-        dto.setCommentCount(thread.getCommentCount());
-        dto.setCreateDate(thread.getCreateDate());
-        dto.setModifiedDate(thread.getModifiedDate());
 
-        return dto;
+
+        return convertToDto(thread);
     }
 
     public Optional<ThreadDto> getThread(Long threadId) { //게시글 하나 조회
         return threadRepository.findById(threadId)
-                .map(thread -> {
-                    ThreadDto dto = new ThreadDto();
-                    dto.setThreadId(thread.getThreadId());
-                    dto.setUserId(thread.getUser().getUserId());
-                    dto.setTitle(thread.getTitle());
-                    dto.setContent(thread.getContent());
-                    dto.setAuthor(thread.getAuthor());
-                    dto.setCount(thread.getCount());
-                    dto.setHeart(thread.getHeart());
-                    dto.setPdfPath(thread.getPdfPath());
-                    dto.setCommentCount(thread.getCommentCount());
-                    dto.setArea(thread.getArea());
-                    dto.setCreateDate(thread.getCreateDate());
-                    dto.setModifiedDate(thread.getModifiedDate());
-                    return dto;
-                });
+
+                .map(this::convertToDto); // ✅ 중복 제거
     }
 
     public List<ThreadDto> getAllThreads() { //모든 게시글 목록 조회
         return threadRepository.findAll().stream()
-                .map(thread -> {
-                    ThreadDto dto = new ThreadDto();
-                    dto.setThreadId(thread.getThreadId());
-                    dto.setUserId(thread.getUser().getUserId());
-                    dto.setTitle(thread.getTitle());
-                    dto.setContent(thread.getContent());
-                    dto.setAuthor(thread.getAuthor());
-                    dto.setCount(thread.getCount());
-                    dto.setHeart(thread.getHeart());
-                    dto.setPdfPath(thread.getPdfPath());
-                    dto.setCommentCount(thread.getCommentCount());
-                    dto.setArea(thread.getArea());
-                    dto.setCreateDate(thread.getCreateDate());
-                    dto.setModifiedDate(thread.getModifiedDate());
-                    return dto;
-                })
+                .map(this::convertToDto) // 공통 변환 메서드 재사용하도록 수정
                 .collect(Collectors.toList());
+
     }
 
     @Transactional // 게시글 삭제 (추추추가)
@@ -112,7 +79,7 @@ public class ThreadService {
         thread.setTitle(dto.getTitle());
         thread.setContent(dto.getContent());
         thread.setAuthor(dto.getAuthor());
-        thread.setPdfPath(dto.getPdfPath());
+        thread.setFilePath(dto.getFilePath());// 파일 업로드
         thread.setArea(dto.getArea());
         thread.setModifiedDate(LocalDateTime.now());
 
@@ -138,23 +105,9 @@ public class ThreadService {
             threads = threadRepository.findByTitleContainingOrContentContaining(keyword, keyword, sort);
         }
         // 검색된 Thread 목록을 DTO로 변환하여 반환
-        return threads.stream().map(thread -> {
-            ThreadDto dto = new ThreadDto();
-            // dto 필드 세팅
-            dto.setThreadId(thread.getThreadId());
-            dto.setUserId(thread.getUser().getUserId());
-            dto.setTitle(thread.getTitle());
-            dto.setContent(thread.getContent());
-            dto.setAuthor(thread.getAuthor());
-            dto.setCount(thread.getCount());
-            dto.setHeart(thread.getHeart());
-            dto.setPdfPath(thread.getPdfPath());
-            dto.setCommentCount(thread.getCommentCount());
-            dto.setArea(thread.getArea());
-            dto.setCreateDate(thread.getCreateDate());
-            dto.setModifiedDate(thread.getModifiedDate());
-            return dto;
-        }).collect(Collectors.toList());
+        return threads.stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
     }
     @Transactional // 게시물 조회수 증가 및 상세 조회
     public ThreadDto getThreadDetail(Long threadId) {
@@ -181,14 +134,16 @@ public class ThreadService {
         dto.setAuthor(thread.getAuthor());
         dto.setCount(thread.getCount());
         dto.setHeart(thread.getHeart());
-        dto.setPdfPath(thread.getPdfPath());
+
+        dto.setFilePath(thread.getFilePath()); // 파일 업로드
         dto.setCommentCount(thread.getCommentCount());
         dto.setArea(thread.getArea());
         dto.setCreateDate(thread.getCreateDate());
         dto.setModifiedDate(thread.getModifiedDate());
 
-        //  댓글 리스트를 CommentDto 리스트로 변환 7/2
-        List<CommentDto> commentDtos = thread.getComments().stream().map(comment -> {
+        //  댓글 리스트를 CommentDto 리스트로 변환 7/2 파일업로드 커맨트 null추가
+        List<CommentDto> commentDtos = thread.getComments() != null
+                ? thread.getComments() .stream().map(comment -> {
             CommentDto commentDto = new CommentDto();
             commentDto.setCommentId(comment.getCommentId());
             commentDto.setThreadId(thread.getThreadId());
@@ -197,7 +152,9 @@ public class ThreadService {
             commentDto.setCreateDate(comment.getCreateDate());
             commentDto.setModifiedDate(comment.getModifiedDate());
             return commentDto;
-        }).toList();
+        }).toList()
+         : List.of();
+
 
         dto.setComments(commentDtos);
 
@@ -242,7 +199,8 @@ public class ThreadService {
                 .author(thread.getAuthor())
                 .count(thread.getCount())
                 .heart(thread.getHeart())
-                .pdfPath(thread.getPdfPath())
+               // .pdfPath(thread.getPdfPath())
+                .filePath(thread.getFilePath()) // 파일 업로드
                 .commentCount(thread.getCommentCount())
                 .area(thread.getArea())
                 .createDate(thread.getCreateDate())
@@ -274,7 +232,8 @@ public class ThreadService {
                 .author(thread.getAuthor())
                 .count(thread.getCount())
                 .heart(thread.getHeart())
-                .pdfPath(thread.getPdfPath())
+
+                .filePath(thread.getFilePath()) // 파일 업로드
                 .commentCount(thread.getCommentCount())
                 .area(thread.getArea())
                 .createDate(thread.getCreateDate())

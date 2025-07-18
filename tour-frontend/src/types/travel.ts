@@ -157,3 +157,20 @@ export interface RouteStep {
   departureTime: string;
   arrivalTime: string;
 }
+
+
+//pdf ts
+
+// export interface PDFOptions {
+//   date?: string;
+// }
+
+// export interface GeneratePDFParams {
+//   tour: TourType;
+//   schedules: ScheduleItemDto[];
+//   options?: PDFOptions;
+//   filename?: string;
+// }
+
+
+

@@ -1,7 +1,7 @@
 
 import { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createThread } from '../../services/threadApi'; // 게시글 작성 API 호출 함수
+import { createThread, uploadFile  } from '../../services/threadApi'; // 게시글 작성 API 호출 함수 및 파일 업로드 
 import { AuthContext } from '../../context/AuthContext'; // 로그인 정보 context
 import { Box, Button, TextField, Typography } from '@mui/material';
 
@@ -10,9 +10,10 @@ const ThreadCreate = () => {
   const [form, setForm] = useState({
     title: '',
     content: '',
-    pdfPath: '',
+    filePath: '',
     area: '',
   });
+  const [pdfFile, setPdfFile] = useState<File | null>(null); //파일 상태 추가 파일 업로드
 
   // 로그인한 사용자 정보 context에서 가져오기
   const { user } = useContext(AuthContext);
@@ -26,6 +27,12 @@ const ThreadCreate = () => {
     // 기존 상태를 복사한 뒤 변경된 항목만 업데이트
     setForm(prev => ({ ...prev, [name]: value }));
   };
+    //파일 선택 이벤트 처리기 추가 파일 업로드
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (e.target.files && e.target.files.length > 0) {
+        setPdfFile(e.target.files[0]);
+      }
+    };
 
   // 폼 제출 시 호출되는 함수 (게시글 작성 요청 처리)
   const handleSubmit = async (e: React.FormEvent) => {
@@ -42,14 +49,24 @@ const ThreadCreate = () => {
       alert('제목과 내용을 입력해주세요.');
       return;
     }
+    try { // 파일 업로드
+      let uploadedFilePath = form.filePath;
 
-    try {
+      // 파일이 있으면 업로드 API 호출 후 경로 받아서 설정
+      if (pdfFile) {
+        uploadedFilePath = await uploadFile(pdfFile);
+      }
+
+   
       // API에 userId, author 추가하여 작성 요청
       await createThread({
-        ...form,
         userId: user.userId,
         author: user.username,
-      });
+        title: form.title.trim(),
+        content: form.content.trim(),
+        filePath: uploadedFilePath || '',
+        area: form.area.trim() || '',
+   });
 
       // 작성 성공 시 게시글 목록 페이지로 이동
       navigate('/thread');
@@ -95,13 +112,14 @@ const ThreadCreate = () => {
           fullWidth
         />
 
-        <TextField
-          label="첨부할 PDF 경로 (선택)"
-          name="pdfPath"
-          value={form.pdfPath}
-          onChange={handleChange}
-          fullWidth
+        {/*  기존 pdfPath 텍스트필드 대신 파일 업로드 input 추가 파일 업로드*/}
+        <input 
+          type="file" 
+          accept="application/pdf" 
+          onChange={handleFileChange} 
+          style={{ marginTop: '10px' }} 
         />
+        {/* 파일 업로드 한 뒤 자동으로 filePath 상태에 반영됨 */}
 
         <TextField
           label="여행 지역 (선택)"

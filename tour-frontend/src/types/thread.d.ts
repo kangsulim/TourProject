@@ -8,10 +8,10 @@ export interface Thread { // thread dto 데이터구조와 일치
   author: string;           // 작성자 이름
   count: number;            // 조회수
   heart: number;            // 좋아요 수
-  pdfPath: string;          // 첨부 파일 경로
+  filePath?: string;          // 첨부 파일 경로 파일 업로드
   commentCount: number;     // 댓글 수
   likedByCurrentUser: boolean; //7/2
-  area: string;             // 지역명
+  area?: string;             // 지역명
   createDate: string;       // 작성일 (ISO 8601)
   modifiedDate: string;     // 수정일
 }
@@ -21,6 +21,6 @@ export interface ThreadRequest { // 게시글 "작성 시" 보내는 데이터 �
   title: string;
   content: string;
   author: string;
-  pdfPath?: string;
+  filePath?: string; // 파일 업로드
   area?: string;
 }

@@ -2,7 +2,7 @@ import React, { useState, useContext } from "react";
 import { Link } from "react-router-dom";
 import { AuthModal } from "./Modal";
 import LogoutButton from "./LogoutButton";
-//import AuthProvider from "../context/AuthContext";
+
 import { AuthContext } from "../context/AuthContext"; 
 import NotificationPopup from "../pages/Notifications/Notification";
 

@@ -12,10 +12,11 @@ import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import { useEffect, useState, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getThreadWithLikeStatus, deleteThread, likeThread, updateThread } from '../../services/threadApi'; 
+import { getThreadWithLikeStatus, deleteThread, likeThread, updateThread, uploadFile } from '../../services/threadApi'; 
 import { Thread, ThreadRequest } from '../../types/thread';
 import { AuthContext } from '../../context/AuthContext';
 import Comments from '../Comments/Comments';
+
 
 
 const ThreadDetail = () => {
@@ -34,9 +35,23 @@ const ThreadDetail = () => {
       title: '',
       content: '',
       author: '',
-      pdfPath: '',
+      filePath: '',
       area: '',
     });
+
+     // 📌  파일 업로드 핸들러
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const uploadedUrl = await uploadFile(file);
+      setEditForm(prev => ({ ...prev, filePath: uploadedUrl }));
+    } catch (error) {
+      console.error('파일 업로드 실패:', error);
+      alert('파일 업로드 중 오류가 발생했습니다.');
+    }
+  };
 
   // ---------------------- [게시글 상세 조회] ----------------------
   useEffect(() => { //7/2
@@ -50,7 +65,7 @@ const ThreadDetail = () => {
           title: data.title,
           content: data.content,
           author: data.author,
-          pdfPath: data.pdfPath,
+          filePath: data.filePath,
           area: data.area,
         });
         // TODO: 여기서 좋아요 여부 API 호출해서 liked 상태 업데이트 가능
@@ -153,10 +168,15 @@ const ThreadDetail = () => {
           </Typography>
           <Typography color="text.secondary" sx={{ mb: 2 }} fontSize={17}>조회수: {thread.count}</Typography>
           <Typography sx={{ whiteSpace: 'pre-wrap', mb: 3, fontSize: '1.05rem' }}>{thread.content}</Typography>
-          {thread.pdfPath && (
-            <Typography mb={2}>
-              첨부 PDF: <Link href={thread.pdfPath} target="_blank" rel="noopener" underline="hover">{thread.pdfPath}</Link>
-            </Typography>
+          {thread.filePath && ( // 파일 업로드
+            <Box mb={2}>
+            <Typography>첨부 이미지:</Typography>
+            <img
+              src={`http://localhost:8080${thread.filePath}`}  // 파일 경로 앞에 서버 주소 붙이기
+              alt="첨부 이미지"
+              style={{ maxWidth: '100%', height: 'auto', marginTop: 8, borderRadius: 4 }}
+            />
+          </Box>
           )}
           {thread.area && <Chip label={`여행 지역: ${thread.area}`} variant="outlined" sx={{ mb: 2, fontSize: '0.95rem' }} />}
 
@@ -180,7 +200,9 @@ const ThreadDetail = () => {
           <Stack spacing={2}>
             <TextField label="제목" name="title" value={editForm.title} onChange={handleEditChange} fullWidth required size="medium" />
             <TextField label="내용" name="content" value={editForm.content} onChange={handleEditChange} fullWidth required multiline rows={8} size="medium" />
-            <TextField label="PDF 경로" name="pdfPath" value={editForm.pdfPath} onChange={handleEditChange} fullWidth size="medium" />
+            <TextField label="PDF 경로" name="filePath" value={editForm.filePath} onChange={handleEditChange} fullWidth size="medium" />
+             {/* 📌  실제 파일 선택 input */}
+            <input type="file" accept="application/pdf" onChange={handleFileChange} />
             <TextField label="여행 지역" name="area" value={editForm.area} onChange={handleEditChange} fullWidth size="medium" />
             <Stack direction="row" spacing={2}>
               <Button type="submit" variant="contained" color="success" sx={{ borderRadius: 8, px: 4, py: 1.5, fontSize: '1rem' }}>✅ 저장</Button>

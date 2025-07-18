@@ -3,11 +3,13 @@ package com.example.tour_backend.controller;
 import com.example.tour_backend.domain.thread.Thread;
 import com.example.tour_backend.dto.thread.ThreadDto;
 import com.example.tour_backend.dto.thread.ThreadUpdateRequestDto;
+import com.example.tour_backend.service.FileUploadService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import com.example.tour_backend.service.ThreadService;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -16,10 +18,11 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ThreadController {
     private final ThreadService threadService;
+    private final FileUploadService fileUploadService; // 파일 업로드
 
     @PostMapping //게시글 생성
-    public ResponseEntity<ThreadDto> createThread(@RequestBody ThreadDto dto) {
-        ThreadDto created = threadService.createThread(dto);
+    public ResponseEntity<ThreadDto> createThread(@RequestBody ThreadUpdateRequestDto requestDto) {
+        ThreadDto created = threadService.createThread(requestDto); // 파일 업로드
         return ResponseEntity.ok(created);
     }
 
@@ -47,7 +50,10 @@ public class ThreadController {
     @PutMapping("/{id}") // 게시물 수정(PUT /api/thread/{id} 엔드포인트 추가) 추추가
     public ResponseEntity<ThreadDto> updateThread(
             @PathVariable Long id,
-            @RequestBody ThreadUpdateRequestDto requestDto) {
+            @RequestBody ThreadUpdateRequestDto requestDto){
+            // 파일 업로드
+
+
         // 수정된 게시글 받아오기
         Thread updated = threadService.updateThread(id, requestDto);
 
@@ -58,7 +64,8 @@ public class ThreadController {
         responseDto.setTitle(updated.getTitle());
         responseDto.setContent(updated.getContent());
         responseDto.setAuthor(updated.getAuthor());
-        responseDto.setPdfPath(updated.getPdfPath());
+
+        responseDto.setFilePath(updated.getFilePath()); // 파일 업로드
         responseDto.setArea(updated.getArea());
         responseDto.setCreateDate(updated.getCreateDate());
         responseDto.setModifiedDate(updated.getModifiedDate());
@@ -99,6 +106,11 @@ public class ThreadController {
     // 인증없이 간단하게 구현하기위해 userId를 @RequestParam 또는 @RequestBody 로 받는 방식 사용
     // 추후 보안상의 이유로 JwtAuthenticationFilter 구현 필요하다면 (JWT)
     // - 필터에서 CustomUserDetails 생성 → SecurityContextHolder에 저장하는 방식으로 바꾸어야함
+    @PostMapping("/upload") // 파일 업로드
+    public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file) {
+        String filePath = fileUploadService.saveFile(file);
+        return ResponseEntity.ok(filePath); // 클라이언트에 저장 경로 응답
+    }
 
 
 

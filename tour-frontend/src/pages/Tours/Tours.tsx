@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Box, Container } from '@mui/material';
 import Maps from '../Maps/Maps';
 import Weathers from '../Weathers/Weathers';
@@ -6,6 +6,9 @@ import { TravelInfo } from '../../components/TravelInfo';
 import TransportSection from '../../components/TransportSection';
 import ScheduleSection from './components/ScheduleSection';
 import { useTravelActions } from '../../store/travelStore';
+import PDFDownloadButton from '../components/PDFDownloadButton'; // PDFDownloadButton 임포트
+import { TourType, ScheduleItemDto, TravelPlanDto, WeatherItemDto, PlanMetadataDto } from '../types/travel'; // 필요한 타입 임포트
+
 
 // 액션 버튼 컴포넌트
 const ActionButtons = () => {

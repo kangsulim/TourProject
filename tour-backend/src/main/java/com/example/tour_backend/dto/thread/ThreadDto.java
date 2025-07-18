@@ -5,6 +5,7 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Getter @Setter
 @Builder
@@ -18,7 +19,9 @@ public class ThreadDto {
     private String author;
     private int count;
     private int heart;
-    private String pdfPath;
+
+    private String filePath; // 파일 업로드
+
     private int commentCount;
     private String area;
 
@@ -40,13 +43,14 @@ public class ThreadDto {
                 .author(thread.getAuthor())
                 .count(thread.getCount())
                 .heart(thread.getHeart())
-                .pdfPath(thread.getPdfPath())
+                .filePath(thread.getFilePath())// 파일 업로드
                 .commentCount(thread.getCommentCount())
                 .area(thread.getArea())
                 .createDate(thread.getCreateDate())
                 .modifiedDate(thread.getModifiedDate())
-                // .likedByCurrentUser(false) // (이건 서비스에서 나중에 추가로 처리)
-                // .comments(null) // (이것도 필요하면 나중에)
+                .likedByCurrentUser(false) // (이건 서비스에서 나중에 추가로 처리)
+                .comments(null) // (이것도 필요하면 나중에)
+
                 .build();
     }
 }
