@@ -13,7 +13,8 @@ const ThreadCreate = () => {
     filePath: '',
     area: '',
   });
-  const [pdfFile, setPdfFile] = useState<File | null>(null); //파일 상태 추가 파일 업로드
+  const [files, setFiles] = useState<File[]>([]); // 여러 파일 배열 상태
+
 
   // 로그인한 사용자 정보 context에서 가져오기
   const { user } = useContext(AuthContext);
@@ -29,52 +30,51 @@ const ThreadCreate = () => {
   };
     //파일 선택 이벤트 처리기 추가 파일 업로드
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (e.target.files && e.target.files.length > 0) {
-        setPdfFile(e.target.files[0]);
+      if (e.target.files) {
+        setFiles(Array.from(e.target.files)); // 여러 개 파일 배열로 저장
       }
     };
 
   // 폼 제출 시 호출되는 함수 (게시글 작성 요청 처리)
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault(); // 기본 폼 제출 이벤트 막음(새로고침 방지)
-
-    // 로그인 여부 확인
+    e.preventDefault();
+  
     if (!user) {
       alert('로그인 후 게시글을 작성할 수 있습니다.');
       return;
     }
-
-    // 제목, 내용 필수 체크
+  
     if (!form.title.trim() || !form.content.trim()) {
       alert('제목과 내용을 입력해주세요.');
       return;
     }
-    try { // 파일 업로드
-      let uploadedFilePath = form.filePath;
-
-      // 파일이 있으면 업로드 API 호출 후 경로 받아서 설정
-      if (pdfFile) {
-        uploadedFilePath = await uploadFile(pdfFile);
+  
+    try {
+      const uploadedFilePaths: string[] = [];
+  
+      // 여러 파일 업로드 처리
+      for (const file of files) {
+        const path = await uploadFile(file);
+        uploadedFilePaths.push(path);
       }
-
-   
-      // API에 userId, author 추가하여 작성 요청
+  
+      // API 요청
       await createThread({
         userId: user.userId,
         author: user.username,
         title: form.title.trim(),
         content: form.content.trim(),
-        filePath: uploadedFilePath || '',
+        filePaths: uploadedFilePaths, // 여러 파일 경로 배열 전달
         area: form.area.trim() || '',
-   });
-
-      // 작성 성공 시 게시글 목록 페이지로 이동
+      });
+  
       navigate('/thread');
     } catch (error) {
       console.error('게시글 작성 실패:', error);
       alert('게시글 작성 중 오류가 발생했습니다.');
     }
   };
+  
 
   return (
     <Box
@@ -115,7 +115,8 @@ const ThreadCreate = () => {
         {/*  기존 pdfPath 텍스트필드 대신 파일 업로드 input 추가 파일 업로드*/}
         <input 
           type="file" 
-          accept="application/pdf" 
+          accept="application/pdf, image/*"
+          multiple
           onChange={handleFileChange} 
           style={{ marginTop: '10px' }} 
         />

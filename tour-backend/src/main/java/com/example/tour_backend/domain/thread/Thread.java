@@ -56,7 +56,9 @@ public class Thread {
     @OneToMany(mappedBy = "thread", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<ThreadLike> likes = new ArrayList<>();
 
+    @ElementCollection
+    @CollectionTable(name = "thread_files", joinColumns = @JoinColumn(name = "thread_id"))
     @Column(name = "file_path")
-    private String filePath; // 파일 업로드
+    private List<String> filePaths = new ArrayList<>();// 파일 업로드
 
 }

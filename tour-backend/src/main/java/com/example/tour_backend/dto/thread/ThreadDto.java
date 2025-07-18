@@ -1,5 +1,6 @@
 package com.example.tour_backend.dto.thread;
 
+import com.example.tour_backend.domain.thread.Thread;
 import com.example.tour_backend.dto.comment.CommentDto;
 import lombok.*;
 
@@ -20,7 +21,8 @@ public class ThreadDto {
     private int count;
     private int heart;
 
-    private String filePath; // 파일 업로드
+    private List<String> filePaths; // ✅ 여러 파일 경로 지원
+
 
     private int commentCount;
     private String area;
@@ -34,7 +36,7 @@ public class ThreadDto {
     private List<CommentDto> comments;
 
     // 마이페이지 좋아요 누른 게시글 확인 7/14
-    public static ThreadDto from(com.example.tour_backend.domain.thread.Thread thread) {
+    public static ThreadDto from(Thread thread) {
         return ThreadDto.builder()
                 .threadId(thread.getThreadId())
                 .userId(thread.getUser().getUserId())
@@ -43,7 +45,7 @@ public class ThreadDto {
                 .author(thread.getAuthor())
                 .count(thread.getCount())
                 .heart(thread.getHeart())
-                .filePath(thread.getFilePath())// 파일 업로드
+                .filePaths(thread.getFilePaths()) // ✅ 여기서 세팅
                 .commentCount(thread.getCommentCount())
                 .area(thread.getArea())
                 .createDate(thread.getCreateDate())

@@ -65,7 +65,7 @@ public class ThreadController {
         responseDto.setContent(updated.getContent());
         responseDto.setAuthor(updated.getAuthor());
 
-        responseDto.setFilePath(updated.getFilePath()); // 파일 업로드
+        responseDto.setFilePaths(updated.getFilePaths()); // ✅ 여러 파일 경로 세팅
         responseDto.setArea(updated.getArea());
         responseDto.setCreateDate(updated.getCreateDate());
         responseDto.setModifiedDate(updated.getModifiedDate());

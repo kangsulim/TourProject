@@ -38,7 +38,7 @@ public class ThreadService {
                 .title(requestDto.getTitle())
                 .content(requestDto.getContent())
                 .author(requestDto.getAuthor())
-                .filePath(requestDto.getFilePath())  // 파일업로드
+                .filePaths(requestDto.getFilePaths())  // 파일업로드
                 .area(requestDto.getArea())
                 .build();
 
@@ -79,7 +79,7 @@ public class ThreadService {
         thread.setTitle(dto.getTitle());
         thread.setContent(dto.getContent());
         thread.setAuthor(dto.getAuthor());
-        thread.setFilePath(dto.getFilePath());// 파일 업로드
+        thread.setFilePaths(dto.getFilePaths());// 파일 업로드
         thread.setArea(dto.getArea());
         thread.setModifiedDate(LocalDateTime.now());
 
@@ -135,7 +135,7 @@ public class ThreadService {
         dto.setCount(thread.getCount());
         dto.setHeart(thread.getHeart());
 
-        dto.setFilePath(thread.getFilePath()); // 파일 업로드
+        dto.setFilePaths(thread.getFilePaths()); // 파일 업로드
         dto.setCommentCount(thread.getCommentCount());
         dto.setArea(thread.getArea());
         dto.setCreateDate(thread.getCreateDate());
@@ -153,7 +153,7 @@ public class ThreadService {
             commentDto.setModifiedDate(comment.getModifiedDate());
             return commentDto;
         }).toList()
-         : List.of();
+        : List.of();
 
 
         dto.setComments(commentDtos);
@@ -200,7 +200,7 @@ public class ThreadService {
                 .count(thread.getCount())
                 .heart(thread.getHeart())
                // .pdfPath(thread.getPdfPath())
-                .filePath(thread.getFilePath()) // 파일 업로드
+                .filePaths(thread.getFilePaths()) // 파일 업로드
                 .commentCount(thread.getCommentCount())
                 .area(thread.getArea())
                 .createDate(thread.getCreateDate())
@@ -233,7 +233,7 @@ public class ThreadService {
                 .count(thread.getCount())
                 .heart(thread.getHeart())
 
-                .filePath(thread.getFilePath()) // 파일 업로드
+                .filePaths(thread.getFilePaths()) // ✅ 여러 개 파일 경로
                 .commentCount(thread.getCommentCount())
                 .area(thread.getArea())
                 .createDate(thread.getCreateDate())
