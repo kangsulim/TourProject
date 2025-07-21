@@ -39,8 +39,7 @@ public class Thread {
     private int count = 0;
     private int heart = 0;
 
-    @Column(nullable = false)
-    private String pdfPath;
+
 
     private int commentCount = 0;
     private String area;
@@ -56,4 +55,10 @@ public class Thread {
 
     @OneToMany(mappedBy = "thread", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<ThreadLike> likes = new ArrayList<>();
+
+    @ElementCollection
+    @CollectionTable(name = "thread_files", joinColumns = @JoinColumn(name = "thread_id"))
+    @Column(name = "file_path")
+    private List<String> filePaths = new ArrayList<>();// 파일 업로드
+
 }
