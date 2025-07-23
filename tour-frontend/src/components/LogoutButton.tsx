@@ -15,7 +15,22 @@ const LogoutButton = () => {
     navigate("/");   // 로그인 페이지로 이동
   };
  // 실제 렌더링되는 버튼
-  return <button onClick={handleLogout}>로그아웃</button>; // 🔹 로그아웃 버튼
+  return <button
+  style={{
+    padding: "10px 15px",
+    backgroundColor: "#1976D2",
+    color: "white",
+    border: "none",
+    borderRadius: "6px",
+    cursor: "pointer",
+    fontSize: "14px",
+    fontWeight: "500",
+    marginRight: "16px",
+  }}
+  onClick={handleLogout}
+>
+  로그아웃
+</button> // 🔹 로그아웃 버튼
 };
 
 export default LogoutButton;  // 다른 파일에서도 이 컴포넌트를 사용할 수 있게 export

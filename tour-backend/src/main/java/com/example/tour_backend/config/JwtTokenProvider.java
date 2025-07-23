@@ -20,7 +20,7 @@ public class JwtTokenProvider {
 
         return Jwts.builder()
                 .setSubject(username)           // 사용자 이름 (식별자)
-                .claim("role", role)            // ✅ role도 claim에 추가
+                .claim("role", role)         // ✅ role도 claim에 추가
                 .setIssuedAt(now)               // 토큰 발급 시간
                 .setExpiration(expiry)          // 만료 시간
                 .signWith(SignatureAlgorithm.HS256, secretKey) // 서명
