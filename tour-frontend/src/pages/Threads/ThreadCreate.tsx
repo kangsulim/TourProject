@@ -1,4 +1,3 @@
-
 import { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createThread, uploadFile  } from '../../services/threadApi'; // 게시글 작성 API 호출 함수 및 파일 업로드 
