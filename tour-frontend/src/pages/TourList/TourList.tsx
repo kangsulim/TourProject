@@ -57,13 +57,15 @@ const TourList: React.FC = () => {
   const [selectedTour, setSelectedTour] = useState<TourType | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  
   const [editForm, setEditForm] = useState({
     title: '',
     startDate: '',
     endDate: '',
     travelers: 2,
-    budget: 'medium' as const
+    budget: 'medium' as 'low' | 'medium' | 'high' | 'luxury',
   });
+   
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [menuTourId, setMenuTourId] = useState<number | null>(null);
 
@@ -324,7 +326,7 @@ const TourList: React.FC = () => {
       ) : (
         <Grid container spacing={3}>
           {tours.map((tour) => (
-            <Grid item xs={12} sm={6} lg={4} key={tour.tourId}>
+            <Grid item xs={12} sm={6} lg={4} key={tour.tourId} >
               <Card 
                 sx={{ 
                   height: '100%',

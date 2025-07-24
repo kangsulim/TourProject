@@ -95,7 +95,7 @@ export const API_ENDPOINTS = {
   
   // MapEntity 관련
   MAP_ENTITIES: '/map-entities',
-  MAP_ENTITIES_BY_SCHEDULE: (scheduleId: number) => `/map-entities/schedule/${scheduleId}`,
+  MAP_ENTITIES_BY_SCHEDULE: (scheduleId: string) => `/map-entities/schedule/${scheduleId}`,
   MAP_ENTITY_BY_ID: (id: number) => `/map-entities/${id}`,
   
   // Traffic 관련

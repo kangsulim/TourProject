@@ -1,4 +1,4 @@
-import { TourType, ScheduleType } from '../types/travel';
+import { TourType, ScheduleItemDto } from '../types/travel';
 
 export interface ValidationResult {
   isValid: boolean;
@@ -60,9 +60,9 @@ export const validateTour = (tour: Partial<TourType>): ValidationResult => {
 /**
  * 일정 정보 검증
  */
-export const validateSchedule = (schedule: Partial<ScheduleType>, tourDate?: { startDate: string; endDate: string }): ValidationResult => {
+export const validateSchedule = (schedule: Partial<ScheduleItemDto>, tourDate?: { startDate: string; endDate: string }): ValidationResult => {
   // 제목 검증
-  if (!schedule.scheduleTitle || schedule.scheduleTitle.trim().length === 0) {
+  if (!schedule.title || schedule.title.trim().length === 0) {
     return { isValid: false, message: '일정 제목을 입력해주세요.' };
   }
 

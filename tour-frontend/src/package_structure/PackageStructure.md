@@ -164,3 +164,100 @@ React TypeScript + Spring Boot 팀프로젝트에서 여행 일정을 PDF로 저
 2. 재사용 가능한 PDF 다운로드 버튼 컴포넌트 생성
 3. Tours 페이지에 PDF 다운로드 기능 추가
 4. 테스트 및 디버깅
+
+---
+
+7/24 할일 
+
+planData
+
+```markdown
+아하! 네, `planData` 안에 `schedules`가 들어있고, 실제 일정 데이터도 그 안에 있는데,
+현재 코드에서 `schedules`를 바로 꺼내서 쓰고 있으면 당연히 메모가 안 보일 수 있습니다.
+
+---
+
+### 핵심 문제 요약
+
+* API 응답 구조가
+
+```json
+{
+  tourId: 4,
+  userId: 3,
+  title: "나의 여행 계획",
+  planData: {
+    schedules: [
+      {
+        scheduleId: "...",
+        memo: "제발 저장",
+        ...
+      },
+      ...
+    ],
+    ...
+  },
+  ...
+}
+```
+
+* 근데 현재 코드에서는 `schedules`를 `planData`에서 꺼내지 않고 최상위 객체에서 꺼내거나,
+* `planData`가 아닌 다른 배열을 참조하고 있을 가능성이 큽니다.
+
+---
+
+### 해결 방법
+
+* `useTravelState()`에서 schedules를 읽을 때
+
+```tsx
+const { planData } = useTravelState();
+const schedules = planData?.schedules || [];
+```
+
+* 이렇게 `planData.schedules`를 참조하도록 바꿔야 합니다.
+
+---
+
+### 예시
+
+```tsx
+const ScheduleList: React.FC = () => {
+  const { planData, selectedDate } = useTravelState();
+  const { reorderSchedules, updateSchedule } = useTravelActions();
+
+  // planData.schedules에서 일정 가져오기
+  const schedules = planData?.schedules || [];
+
+  const todaySchedules = useMemo(() => {
+    if (!selectedDate) return [];
+
+    return schedules
+      .filter(schedule => schedule.date === selectedDate)
+      .sort((a, b) => {
+        if (a.order !== undefined && b.order !== undefined) {
+          return a.order - b.order;
+        }
+        if (!a.startTime || !b.startTime) return 0;
+        return a.startTime.localeCompare(b.startTime);
+      });
+  }, [schedules, selectedDate]);
+
+  // 나머지 기존 코드 유지...
+};
+```
+
+---
+
+### 요약
+
+* `planData.schedules`를 제대로 읽어와서 `ScheduleList`가 사용하도록 수정해야 함
+* 그래야 `memo` 포함한 모든 일정 데이터가 화면에 정확히 반영됨
+* `useTravelState()`나 상태 관리 부분에서 `planData`를 제대로 불러오는지 확인 필요
+
+---
+
+필요하면 `useTravelState` 상태 구조도 알려주시면 더 맞춤으로 도와드릴 수 있어요!
+기본적으로 `planData.schedules`에서 데이터를 읽도록 고쳐 보세요!
+
+```

@@ -1,172 +1,189 @@
+import { TourType } from '../types/travel';
 
-import React from 'react';
-import { Page, Text, View, Document, StyleSheet, pdf, Font } from '@react-pdf/renderer'; // Font 임포트 추가
-import { TourType, ScheduleItemDto, LocationDataDto, TrafficDataDto } from '../types/travel'; // 기존 타입 임포트
 
-// --- 한글 폰트 등록 (필수) ---
-// Noto Sans KR 폰트 파일을 public/fonts 폴더에 두는 것을 권장합니다.
-// (예: public/fonts/NotoSansKR-Regular.ttf)
-// 만약 다른 경로에 있다면 해당 경로로 수정해주세요.
-try {
-  Font.register({
-    family: 'Noto Sans KR',
-    src: '/fonts/NotoSansKR-Regular.ttf', // public 폴더 기준 경로
-  });
-} catch (error) {
-  console.error("폰트 등록 중 오류 발생. 폰트 파일 경로를 확인해주세요:", error);
+// 📋 PDF 설정 타입
+export interface PDFConfig {
+  fontSize: {
+    title: number;
+    subtitle: number;
+    body: number;
+    small: number;
+  };
+  colors: {
+    primary: string;
+    secondary: string;
+    text: string;
+    background: string;
+  };
+  fonts: {
+    regular: string;
+    bold: string;
+  };
 }
 
+// 🎨 PDF 스타일 옵션
+export interface PDFStyleOptions {
+  pageOrientation?: 'portrait' | 'landscape';
+  pageSize?: 'A4' | 'A3' | 'LETTER';
+  margin?: number;
+  headerColor?: string;
+  accentColor?: string;
+}
 
-// --- PDF 스타일 정의 (MUI 디자인 시스템 참고) ---
-const styles = StyleSheet.create({
-  page: {
-    flexDirection: 'column',
-    backgroundColor: '#FFFFFF',
-    padding: 30,
-    fontFamily: 'Noto Sans KR', // 등록된 한글 폰트 적용
+// 📄 PDF 생성 결과
+export interface PDFGenerationResult {
+  success: boolean;
+  fileName?: string;
+  error?: string;
+  fileSize?: number;
+}
+
+// 🔤 폰트 로딩 관련 타입
+export interface FontConfig {
+  name: string;
+  path: string;
+  family: string;
+  weight: 'normal' | 'bold';
+}
+
+// 📊 PDF 메타데이터
+export interface PDFMetadata {
+  title: string;
+  author: string;
+  subject: string;
+  creator: string;
+  creationDate: Date;
+}
+
+// 🎯 기본 PDF 설정
+export const DEFAULT_PDF_CONFIG: PDFConfig = {
+  fontSize: {
+    title: 20,
+    subtitle: 14,
+    body: 11,
+    small: 9
   },
-  section: {
-    margin: 10,
-    padding: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-    marginBottom: 10,
+  colors: {
+    primary: '#2980b9',
+    secondary: '#f8f9fa',
+    text: '#212529',
+    background: '#ffffff'
   },
-  title: {
-    fontSize: 28,
-    textAlign: 'center',
-    marginBottom: 25,
-    fontWeight: 'bold',
-    color: '#3F51B5', // MUI Primary color (예시)
-  },
-  subtitle: {
-    fontSize: 20,
-    marginBottom: 12,
-    fontWeight: 'bold',
-    color: '#424242',
-  },
-  dateHeader: {
-    fontSize: 18,
-    marginBottom: 10,
-    fontWeight: 'bold',
-    color: '#616161',
-  },
-  activityText: {
-    fontSize: 13,
-    marginBottom: 6,
-    marginLeft: 12,
-    color: '#212121',
-  },
-  locationDetail: {
-    fontSize: 11,
-    color: '#757575',
-    marginLeft: 20,
-    marginBottom: 3,
-  },
-  trafficDetail: {
-    fontSize: 11,
-    color: '#757575',
-    marginLeft: 20,
-    marginBottom: 3,
-  },
-  memoText: { // ScheduleItemDto에 memo 필드가 없다면 이 스타일은 사용되지 않을 수 있습니다.
-    fontSize: 11,
-    color: '#9E9E9E',
-    marginLeft: 20,
-    marginTop: 6,
-    fontStyle: 'italic',
+  fonts: {
+    regular:  'Times-Roman',//'NotoSansKR',
+    bold: 'Times-Bold'//'NotoSansKR'
   }
-});
-
-// --- PDF 문서 컴포넌트 정의 ---
-interface TravelPlanDocumentProps {
-  tour: TourType;
-  schedules: ScheduleItemDto[];
-}
-
-const TravelPlanDocument: React.FC<TravelPlanDocumentProps> = ({ tour, schedules }) => {
-  // 날짜별로 스케줄을 그룹화
-  const schedulesByDate: { [key: string]: ScheduleItemDto[] } = schedules.reduce((acc, schedule) => {
-    const date = schedule.date;
-    if (!acc[date]) {
-      acc[date] = [];
-    }
-    acc[date].push(schedule);
-    return acc;
-  }, {} as { [key: string]: ScheduleItemDto[] });
-
-  // 날짜를 정렬 (오름차순)
-  const sortedDates = Object.keys(schedulesByDate).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
-
-  return (
-    <Document>
-      <Page size="A4" style={styles.page}>
-        <View style={styles.section}>
-          <Text style={styles.title}>{tour.title} 여행 계획</Text>
-          <Text style={styles.subtitle}>
-            기간: {tour.startDate} ~ {tour.endDate} ({tour.travelers}명)
-          </Text>
-          {tour.budget && <Text style={styles.activityText}>예상 예산: {tour.budget}</Text>}
-          {tour.planData?.metadata?.totalDays && (
-            <Text style={styles.activityText}>총 일수: {tour.planData.metadata.totalDays}일</Text>
-          )}
-          {tour.planData?.metadata?.estimatedBudget && (
-            <Text style={styles.activityText}>예상 총 경비: {tour.planData.metadata.estimatedBudget.toLocaleString()}원</Text>
-          )}
-        </View>
-
-        {sortedDates.map((date, dateIndex) => (
-          <View key={dateIndex} style={styles.section}>
-            <Text style={styles.dateHeader}>날짜: {date}</Text>
-            {schedulesByDate[date]
-              .sort((a, b) => a.startTime.localeCompare(b.startTime)) // 시간 순서로 스케줄 정렬
-              .map((schedule, scheduleIndex) => (
-              <View key={scheduleIndex} style={{ marginBottom: 8 }}>
-                <Text style={styles.activityText}>
-                  {schedule.startTime} - {schedule.endTime}: {schedule.title}
-                </Text>
-                <Text style={styles.activityText}>  내용: {schedule.content}</Text>
-                {schedule.type === 'location' && schedule.locationData && (
-                  <View>
-                    <Text style={styles.locationDetail}>  장소: {(schedule.locationData as LocationDataDto).name}</Text>
-                    <Text style={styles.locationDetail}>  주소: {(schedule.locationData as LocationDataDto).address}</Text>
-                    {(schedule.locationData as LocationDataDto).rating && (
-                      <Text style={styles.locationDetail}>  평점: {(schedule.locationData as LocationDataDto).rating} / 5</Text>
-                    )}
-                    {(schedule.locationData as LocationDataDto).googleMapLink && (
-                        <Text style={styles.locationDetail}>  지도: {(schedule.locationData as LocationDataDto).googleMapLink}</Text>
-                    )}
-                  </View>
-                )}
-                {schedule.type === 'traffic' && schedule.trafficData && (
-                  <View>
-                    <Text style={styles.trafficDetail}>  교통수단: {(schedule.trafficData as TrafficDataDto).mode}</Text>
-                    <Text style={styles.trafficDetail}>  출발: {(schedule.trafficData as TrafficDataDto).departure}</Text>
-                    <Text style={styles.trafficDetail}>  도착: {(schedule.trafficData as TrafficDataDto).destination}</Text>
-                    <Text style={styles.trafficDetail}>  소요 시간: {(schedule.trafficData as TrafficDataDto).totalDuration}</Text>
-                    <Text style={styles.trafficDetail}>  환승: {(schedule.trafficData as TrafficDataDto).transfers}회</Text>
-                    <Text style={styles.trafficDetail}>  비용: {(schedule.trafficData as TrafficDataDto).price.toLocaleString()}원</Text>
-                  </View>
-                )}
-                 {/* ScheduleType의 memo 필드가 ScheduleItemDto에 통합되지 않았다면 제거하거나 적절히 매핑해야 합니다. */}
-                 {/* <Text style={styles.memoText}>메모: {schedule.memo || '없음'}</Text> */}
-              </View>
-            ))}
-          </View>
-        ))}
-      </Page>
-    </Document>
-  );
 };
 
-// --- PDF Blob 생성 함수 ---
-// 이 함수는 PDF 문서를 React 컴포넌트 형태로 받아 Blob으로 변환하여 반환합니다.
-export async function generateTravelPlanPdfBlob(
-  tour: TourType,
-  schedules: ScheduleItemDto[]
-): Promise<Blob> {
-  const doc = <TravelPlanDocument tour={tour} schedules={schedules} />;
-  const blob = await pdf(doc).toBlob();
-  return blob;
-}
+// 🔤 폰트 설정
+export const FONT_CONFIGS: FontConfig[] = [
+  // {
+  //   name: 'NotoSansKR-Regular',
+  //   path: '', //'/fonts/NotoSansKR-Regular.ttf',
+  //   family: 'Malgun Gothic', //'NotoSansKR',
+  //   weight: 'normal'
+  // }
+];
 
+// 📁 파일명 생성 유틸리티
+export const generatePDFFileName = (tourTitle: string, date?: string): string => {
+  const sanitizedTitle = tourTitle.replace(/[^a-zA-Z0-9가-힣\s]/g, '').trim();
+  const dateStr = date || new Date().toISOString().split('T')[0];
+  return `${sanitizedTitle}_${dateStr}.pdf`;
+};
+
+// 📅 날짜 포맷 유틸리티
+export const formatDate = (dateString: string): string => {
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('ko-KR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      weekday: 'short'
+    });
+  } catch {
+    return dateString;
+  }
+};
+
+// 💰 금액 포맷 유틸리티
+export const formatCurrency = (amount: number): string => {
+  return amount.toLocaleString('ko-KR') + '원';
+};
+
+// 🎨 색상 유틸리티
+export const hexToRgb = (hex: string): [number, number, number] => {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result
+    ? [
+        parseInt(result[1], 16),
+        parseInt(result[2], 16),
+        parseInt(result[3], 16)
+      ]
+    : [0, 0, 0];
+};
+
+// 📏 텍스트 길이 제한 유틸리티
+export const truncateText = (text: string, maxLength: number): string => {
+  if (text.length <= maxLength) return text;
+  return text.substring(0, maxLength - 3) + '...';
+};
+
+// 🔍 데이터 검증 유틸리티
+export const validateTourData = (tour: TourType): { isValid: boolean; errors: string[] } => {
+  const errors: string[] = [];
+
+  if (!tour.title?.trim()) {
+    errors.push('여행 제목이 없습니다.');
+  }
+
+  if (!tour.startDate) {
+    errors.push('출발일이 설정되지 않았습니다.');
+  }
+
+  if (!tour.endDate) {
+    errors.push('종료일이 설정되지 않았습니다.');
+  }
+
+  if (!tour.travelers || tour.travelers < 1) {
+    errors.push('여행자 수가 올바르지 않습니다.');
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+};
+
+// 📱 브라우저 다운로드 유틸리티
+export const downloadBlob = (blob: Blob, fileName: string): void => {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fileName;
+  link.style.display = 'none';
+  
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  
+  // 메모리 정리
+  setTimeout(() => URL.revokeObjectURL(url), 100);
+};
+
+// 🔧 오류 처리 유틸리티
+export const handlePDFError = (error: unknown): PDFGenerationResult => {
+  console.error('PDF 생성 오류:', error);
+  
+  let errorMessage = 'PDF 생성 중 알 수 없는 오류가 발생했습니다.';
+  
+  if (error instanceof Error) {
+    errorMessage = error.message;
+  }
+  
+  return {
+    success: false,
+    error: errorMessage
+  };
+};

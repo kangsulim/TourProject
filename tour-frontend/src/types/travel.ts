@@ -22,14 +22,18 @@ export interface TravelPlanDto {
 // 백엔드 ScheduleItemDto와 일치하는 구조
 export interface ScheduleItemDto {
   scheduleId: string;
+  tourId: number;
   date: string;
   startTime: string;
   endTime: string;
   title: string;
   content: string;
-  type: 'location' | 'traffic'; // location 또는 traffic
+  memo?: string; // 사용자 메모 추가
+  types?: ('location' | 'traffic')[]; // location 또는 traffic
   locationData?: LocationDataDto;
   trafficData?: TrafficDataDto;
+   // ⬇️ 프론트에서만 쓰는 필드 (백엔드 저장 안됨)
+   order?: number;
 }
 
 // 백엔드 LocationDataDto와 일치하는 구조
@@ -76,9 +80,9 @@ export interface PlanMetadataDto {
 
 // 프론트엔드에서만 사용하는 Schedule 타입 (레거시 호환)
 export interface ScheduleType {
-  scheduleId?: number;
+  scheduleId: string;
   tourId: number;
-  scheduleTitle: string;
+  title: string;
   content: string;
   date: string;
   startTime: string;
@@ -90,7 +94,7 @@ export interface ScheduleType {
 // 프론트엔드에서만 사용하는 MapEntity 타입 (레거시 호환)
 export interface MapEntityType {
   mapId?: number;
-  scheduleId: number;
+  scheduleId: string;
   tourId: number;
   location: string; // JSON 형태의 LocationData
 }
@@ -98,6 +102,7 @@ export interface MapEntityType {
 // 프론트엔드에서만 사용하는 Traffic 타입 (레거시 호환)
 export interface TrafficType {
   trafficId?: number;
+  scheduleId: string;
   tourId: number;
   vehicle: string; // JSON 형태의 교통수단 상세 정보
   spendTime: string; // ISO datetime format

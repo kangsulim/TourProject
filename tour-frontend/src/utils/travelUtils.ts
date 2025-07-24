@@ -2,8 +2,8 @@
 
 import { 
   LocationData, 
-  VehicleData, 
-  ScheduleType, 
+  VehicleData,  
+  ScheduleItemDto,
   MapEntityType, 
   TrafficType 
 } from '../types/travel';
@@ -100,7 +100,7 @@ export const timeStringToMinutes = (timeString: string): number => {
 /**
  * 일정을 시간 순으로 정렬
  */
-export const sortSchedulesByTime = (schedules: ScheduleType[]): ScheduleType[] => {
+export const sortSchedulesByTime = (schedules: ScheduleItemDto[]): ScheduleItemDto[] => {
   return [...schedules].sort((a, b) => {
     const timeA = timeStringToMinutes(a.startTime);
     const timeB = timeStringToMinutes(b.startTime);
@@ -111,7 +111,7 @@ export const sortSchedulesByTime = (schedules: ScheduleType[]): ScheduleType[] =
 /**
  * 날짜별로 일정 그룹화
  */
-export const groupSchedulesByDate = (schedules: ScheduleType[]): Record<string, ScheduleType[]> => {
+export const groupSchedulesByDate = (schedules: ScheduleItemDto[]): Record<string, ScheduleItemDto[]> => {
   return schedules.reduce((groups, schedule) => {
     const date = schedule.date;
     if (!groups[date]) {
@@ -119,7 +119,7 @@ export const groupSchedulesByDate = (schedules: ScheduleType[]): Record<string, 
     }
     groups[date].push(schedule);
     return groups;
-  }, {} as Record<string, ScheduleType[]>);
+  }, {} as Record<string, ScheduleItemDto[]>);
 };
 
 /**
@@ -226,7 +226,7 @@ export const formatDistance = (meters: number): string => {
  */
 export const checkScheduleConflict = (
   newSchedule: { startTime: string; endTime: string; date: string },
-  existingSchedules: ScheduleType[]
+  existingSchedules: ScheduleItemDto[]
 ): boolean => {
   const newStart = timeStringToMinutes(newSchedule.startTime);
   const newEnd = timeStringToMinutes(newSchedule.endTime);
@@ -247,7 +247,7 @@ export const checkScheduleConflict = (
  */
 export const suggestNextAvailableTime = (
   date: string,
-  existingSchedules: ScheduleType[],
+  existingSchedules: ScheduleItemDto[],
   durationMinutes: number = 120
 ): { startTime: string; endTime: string } => {
   const dateSchedules = existingSchedules

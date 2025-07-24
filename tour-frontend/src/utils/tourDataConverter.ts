@@ -5,8 +5,7 @@ import {
   LocationDataDto, 
   TrafficDataDto,
   WeatherItemDto,
-  PlanMetadataDto,
-  ScheduleType, 
+  PlanMetadataDto, 
   MapEntityType, 
   TrafficType, 
   LocationData, 
@@ -22,7 +21,7 @@ import {
  * 프론트엔드 데이터를 백엔드 TravelPlanDto 형식으로 변환
  */
 export const convertToTravelPlanDto = (
-  schedules: ScheduleType[],
+  schedules: ScheduleItemDto[],
   mapEntities: MapEntityType[],
   trafficData: TrafficType[],
   weatherData: WeatherType[] = []
@@ -40,13 +39,15 @@ export const convertToTravelPlanDto = (
     );
 
     const scheduleItem: ScheduleItemDto = {
-      scheduleId: schedule.scheduleId?.toString() || '',
+      scheduleId: schedule.scheduleId || '',
+      tourId: schedule.tourId, 
       date: schedule.date,
       startTime: schedule.startTime,
       endTime: schedule.endTime,
-      title: schedule.scheduleTitle,
+      title: schedule.title,
       content: schedule.content,
-      type: mapEntity ? 'location' : 'traffic',
+      memo: schedule.memo || '',
+      types: mapEntity ? ['location'] : ['traffic'],
     };
 
     // 장소 데이터 변환
@@ -110,33 +111,34 @@ export const convertFromTravelPlanDto = (
   planData: TravelPlanDto,
   tourId: number
 ): {
-  schedules: ScheduleType[];
+  schedules: ScheduleItemDto[];
   mapEntities: MapEntityType[];
   trafficData: TrafficType[];
   weatherData: WeatherType[];
 } => {
   
-  const schedules: ScheduleType[] = [];
+  const schedules: ScheduleItemDto[] = [];
   const mapEntities: MapEntityType[] = [];
   const trafficData: TrafficType[] = [];
 
   planData.schedules.forEach((scheduleItem, index) => {
-    const scheduleId = parseInt(scheduleItem.scheduleId) || (index + 1);
+    const scheduleId = scheduleItem.scheduleId || `temp_${index + 1}`;  
 
     // 기본 일정 정보 변환
-    const schedule: ScheduleType = {
+    const schedule: ScheduleItemDto = {
       scheduleId,
       tourId,
-      scheduleTitle: scheduleItem.title,
+      title: scheduleItem.title,
       content: scheduleItem.content,
       date: scheduleItem.date,
       startTime: scheduleItem.startTime,
-      endTime: scheduleItem.endTime
+      endTime: scheduleItem.endTime,
+      memo: scheduleItem.memo || ''
     };
     schedules.push(schedule);
 
     // 장소 정보가 있으면 MapEntity 생성
-    if (scheduleItem.type === 'location' && scheduleItem.locationData) {
+    if (scheduleItem.types?.includes('location') && scheduleItem.locationData) {
       const locationData: LocationData = {
         name: scheduleItem.locationData.name,
         address: scheduleItem.locationData.address,
@@ -151,7 +153,7 @@ export const convertFromTravelPlanDto = (
       };
 
       const mapEntity: MapEntityType = {
-        mapId: scheduleId,
+        //mapId: scheduleId,
         scheduleId,
         tourId,
         location: JSON.stringify(locationData)
@@ -160,7 +162,7 @@ export const convertFromTravelPlanDto = (
     }
 
     // 교통편 정보가 있으면 TrafficType 생성
-    if (scheduleItem.type === 'traffic' && scheduleItem.trafficData) {
+    if (scheduleItem.types?.includes('traffic') && scheduleItem.trafficData) {
       const vehicleData: VehicleData = {
         mode: 'TRANSIT',
         steps: [], // 실제 구현시 route step 정보 필요
@@ -171,7 +173,8 @@ export const convertFromTravelPlanDto = (
       };
 
       const traffic: TrafficType = {
-        trafficId: scheduleId,
+        //trafficId,
+        scheduleId,
         tourId,
         vehicle: JSON.stringify(vehicleData),
         spendTime: new Date().toISOString(),
@@ -205,7 +208,7 @@ export const convertFromTravelPlanDto = (
  */
 export const convertTourToBackendFormat = (
   tour: TourType,
-  schedules: ScheduleType[],
+  schedules: ScheduleItemDto[],
   mapEntities: MapEntityType[],
   trafficData: TrafficType[],
   weatherData: WeatherType[] = []
@@ -229,7 +232,7 @@ export const convertTourFromBackendFormat = (
   backendTour: TourType
 ): {
   tour: TourType;
-  schedules: ScheduleType[];
+  schedules: ScheduleItemDto[];
   mapEntities: MapEntityType[];
   trafficData: TrafficType[];
   weatherData: WeatherType[];
@@ -279,7 +282,7 @@ export const formatDateForBackend = (date: string): string => {
 /**
  * 총 여행 일수 계산
  */
-const calculateTotalDays = (schedules: ScheduleType[]): number => {
+const calculateTotalDays = (schedules: ScheduleItemDto[]): number => {
   if (schedules.length === 0) return 0;
   
   const dates = schedules.map(s => s.date).filter(Boolean);
@@ -292,7 +295,7 @@ const calculateTotalDays = (schedules: ScheduleType[]): number => {
 /**
  * 예상 예산 계산
  */
-const calculateEstimatedBudget = (schedules: ScheduleType[], trafficData: TrafficType[]): number => {
+const calculateEstimatedBudget = (schedules: ScheduleItemDto[], trafficData: TrafficType[]): number => {
   // 일정당 5만원 기준 + 교통비
   const scheduleBudget = schedules.length * 50000;
   const trafficBudget = trafficData.reduce((sum, traffic) => sum + traffic.price, 0);
