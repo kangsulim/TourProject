@@ -199,7 +199,6 @@ public class ThreadService {
                 .author(thread.getAuthor())
                 .count(thread.getCount())
                 .heart(thread.getHeart())
-               // .pdfPath(thread.getPdfPath())
                 .filePaths(thread.getFilePaths()) // 파일 업로드
                 .commentCount(thread.getCommentCount())
                 .area(thread.getArea())

@@ -12,13 +12,13 @@ import {
   Alert
 } from '@mui/material';
 import { Edit as EditIcon, AccessTime as TimeIcon, Note as NoteIcon } from '@mui/icons-material';
-import { ScheduleType } from '../../../../../types/travel';
+import { ScheduleItemDto } from '../../../../../types/travel';
 
 interface ScheduleEditModalProps {
   open: boolean;
-  schedule: ScheduleType | null;
+  schedule: ScheduleItemDto | null;
   onClose: () => void;
-  onSave: (scheduleId: number, updates: Partial<ScheduleType>) => void;
+  onSave: (scheduleId: string, updates: Partial<ScheduleItemDto>) => void;
 }
 
 const ScheduleEditModal: React.FC<ScheduleEditModalProps> = ({
@@ -123,9 +123,9 @@ const ScheduleEditModal: React.FC<ScheduleEditModalProps> = ({
   if (!schedule) return null;
 
   // 교통편 여부 확인
-  const isTransport = schedule.scheduleTitle.includes('🚇') || 
-                      schedule.scheduleTitle.includes('🚌') || 
-                      schedule.scheduleTitle.includes('🚗');
+  const isTransport = schedule.title.includes('🚇') || 
+                      schedule.title.includes('🚌') || 
+                      schedule.title.includes('🚗');
 
   return (
     <Dialog 
@@ -153,7 +153,7 @@ const ScheduleEditModal: React.FC<ScheduleEditModalProps> = ({
         {/* 일정 정보 표시 */}
         <Box sx={{ mb: 3, p: 2, backgroundColor: 'grey.50', borderRadius: 2 }}>
           <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-            {schedule.scheduleTitle}
+            {schedule.title}
           </Typography>
           <Typography variant="body2" color="text.secondary">
             {schedule.content}

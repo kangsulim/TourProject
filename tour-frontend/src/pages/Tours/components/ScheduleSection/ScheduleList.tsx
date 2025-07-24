@@ -3,14 +3,17 @@ import { Box, Typography, Button, Paper } from '@mui/material';
 import { LocationOn as LocationIcon, Train as TrainIcon, DragIndicator as DragIcon } from '@mui/icons-material';
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 import { useTravelState, useTravelActions } from '../../../../store/travelStore';
-import { ScheduleType } from '../../../../types/travel';
+import { ScheduleItemDto } from '../../../../types/travel';
 import ScheduleEditModal from './ScheduleEditModal';
+
+
+// ScheduleItemDto 불러와서 임포트해야 메모 저장됨 내일 할일
 
 // 드래그 가능한 ScheduleItem 컴포넌트
 const ScheduleItem: React.FC<{ 
-  schedule: ScheduleType; 
+  schedule: ScheduleItemDto; 
   isDragging?: boolean;
-  onEdit: (schedule: ScheduleType) => void;
+  onEdit: (schedule: ScheduleItemDto) => void;
 }> = ({ 
   schedule, 
   isDragging = false,
@@ -20,7 +23,7 @@ const ScheduleItem: React.FC<{
   const { mapEntities } = useTravelState();
   
   // 교통편 여부 확인 (제목에 이모지로 구분)
-  const isTransport = schedule.scheduleTitle.includes('🚇') || schedule.scheduleTitle.includes('🚌') || schedule.scheduleTitle.includes('🚗');
+  const isTransport = schedule.title.includes('🚇') || schedule.title.includes('🚌') || schedule.title.includes('🚗');
   
   // 해당 스케줄의 위치 정보 찾기
   const locationEntity = mapEntities.find(entity => entity.scheduleId === schedule.scheduleId);
@@ -98,7 +101,7 @@ const ScheduleItem: React.FC<{
         {/* 중간: 일정 정보 */}
         <Box sx={{ flex: 1, mx: 2 }}>
           <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
-            {schedule.scheduleTitle}
+            {schedule.title}
             {locationEntity && !isTransport && (
               <Typography 
                 component="span" 
@@ -172,7 +175,7 @@ const ScheduleList: React.FC = () => {
   
   // 수정 모달 상태 관리
   const [editModalOpen, setEditModalOpen] = useState(false);
-  const [editingSchedule, setEditingSchedule] = useState<ScheduleType | null>(null);
+  const [editingSchedule, setEditingSchedule] = useState<ScheduleItemDto | null>(null);
 
   // 선택된 날짜의 일정들만 필터링 (드래그앤드롭 순서 우선, 시간 순서는 백업)
   const todaySchedules = useMemo(() => {
@@ -193,7 +196,7 @@ const ScheduleList: React.FC = () => {
   }, [schedules, selectedDate]);
   
   // 수정 모달 열기
-  const handleEditSchedule = (schedule: ScheduleType) => {
+  const handleEditSchedule = (schedule: ScheduleItemDto) => {
     setEditingSchedule(schedule);
     setEditModalOpen(true);
   };
@@ -205,7 +208,7 @@ const ScheduleList: React.FC = () => {
   };
 
   // 일정 업데이트 처리
-  const handleUpdateSchedule = (scheduleId: number, updates: Partial<ScheduleType>) => {
+  const handleUpdateSchedule = (scheduleId: string, updates: Partial<ScheduleItemDto>) => {
     updateSchedule(scheduleId, updates);
     console.log('일정 수정 완료:', { scheduleId, updates });
   };
@@ -238,7 +241,7 @@ const ScheduleList: React.FC = () => {
       to: result.destination.index,
       reorderedSchedules: updatedItems.map(item => ({ 
         id: item.scheduleId, 
-        title: item.scheduleTitle, 
+        title: item.title, 
         order: item.order 
       }))
     });
@@ -310,8 +313,8 @@ const ScheduleList: React.FC = () => {
               >
                 {todaySchedules.map((schedule, index) => (
                   <Draggable 
-                    key={schedule.scheduleId?.toString() || `schedule-${index}`} 
-                    draggableId={schedule.scheduleId?.toString() || `schedule-${index}`} 
+                    key={schedule.scheduleId || `schedule-${index}`} 
+                    draggableId={schedule.scheduleId || `schedule-${index}`} 
                     index={index}
                   >
                     {(provided, snapshot) => (

@@ -16,7 +16,7 @@ export const mapAPI = {
   },
 
   // 일정별 지도 엔티티 목록 조회
-  getMapEntitiesByScheduleId: async (scheduleId: number): Promise<MapEntityType[]> => {
+  getMapEntitiesByScheduleId: async (scheduleId: string): Promise<MapEntityType[]> => {
     const response = await api.get<ApiResponse<MapEntityType[]>>(`/map-entities/schedule/${scheduleId}`);
     return response.data.data;
   },
@@ -51,7 +51,7 @@ export const mapAPI = {
   },
 
   // 일정의 모든 지도 엔티티 삭제
-  deleteMapEntitiesByScheduleId: async (scheduleId: number): Promise<void> => {
+  deleteMapEntitiesByScheduleId: async (scheduleId: string): Promise<void> => {
     await api.delete(`/map-entities/schedule/${scheduleId}`);
   }
 };

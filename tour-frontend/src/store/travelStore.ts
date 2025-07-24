@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import {
   TourType,
+  ScheduleItemDto,
   TravelPlanDto,
   ScheduleType,
   MapEntityType,
@@ -33,7 +34,7 @@ interface TravelState {
   currentTour: TourType | null;
   
   // 일정 관련
-  schedules: ScheduleType[];
+  schedules:  ScheduleItemDto[];
   mapEntities: MapEntityType[];
   trafficData: TrafficType[];
   
@@ -70,18 +71,18 @@ interface TravelActions {
   addNextDate: () => void; // 다음 날짜 추가
   
   // Schedule 관련 액션
-  addSchedule: (schedule: Omit<ScheduleType, 'scheduleId'>) => void;
-  updateSchedule: (scheduleId: number, updates: Partial<ScheduleType>) => void;
-  removeSchedule: (scheduleId: number) => void;
-  reorderSchedules: (date: string, reorderedSchedules: ScheduleType[]) => void; // 드래그앤드롭용
+  addSchedule: (schedule: Omit<ScheduleItemDto, 'scheduleId'>) => void;
+  updateSchedule: (scheduleId: string, updates: Partial<ScheduleItemDto>) => void;
+  removeSchedule: (scheduleId: string) => void;
+  reorderSchedules: (date: string, reorderedSchedules: ScheduleItemDto[]) => void; // 드래그앤드롭용
   
   // MapEntity 관련 액션
-  addLocationToSchedule: (location: LocationData, scheduleData?: Partial<ScheduleType>) => void;
+  addLocationToSchedule: (location: LocationData, scheduleData?: Partial<ScheduleItemDto>) => void;
   removeMapEntity: (mapId: number) => void;
   updateMapEntity: (mapId: number, updates: Partial<MapEntityType>) => void;
   
   // Traffic 관련 액션
-  addRouteToSchedule: (route: RouteResult, scheduleData?: Partial<ScheduleType>) => void;
+  addRouteToSchedule: (route: RouteResult, scheduleData?: Partial<ScheduleItemDto>) => void;
   removeTraffic: (trafficId: number) => void;
   
   // 지도 관련 액션
@@ -126,55 +127,60 @@ const sampleData = {
   },
   schedules: [
     {
-      scheduleId: 1,
+      scheduleId: "1",
       tourId: 1,
-      scheduleTitle: "경복궁 관람",
+      title: "경복궁 관람",
       content: "조선 왕조의 정궁, 근정전과 경회루 관람",
       date: "2025-07-15",
       startTime: "09:00",
-      endTime: "11:00"
+      endTime: "11:00",
+      memo: "예전 메모 예시"
     },
     {
-      scheduleId: 2,
+      scheduleId: "2",
       tourId: 1,
-      scheduleTitle: "지하철 3호선 이용",
+      title: "지하철 3호선 이용",
       content: "경복궁역 → 안국역, 5분 소요",
       date: "2025-07-15",
       startTime: "11:15",
-      endTime: "11:20"
+      endTime: "11:20",
+      memo: "예전 메모 예시"
     },
     {
-      scheduleId: 3,
+      scheduleId: "3",
       tourId: 1,
-      scheduleTitle: "북촌한옥마을 산책",
+      title: "북촌한옥마을 산책",
       content: "전통 한옥의 아름다움과 서울 전경 감상",
       date: "2025-07-15",
       startTime: "11:30",
-      endTime: "13:00"
+      endTime: "13:00",
+      memo: "예전 메모 예시"
     },
     {
-      scheduleId: 4,
+      scheduleId: "4",
       tourId: 1,
-      scheduleTitle: "명동 맛집 탐방",
+      title: "명동 맛집 탐방",
       content: "명동교자 본점에서 만두 점심",
       date: "2025-07-15",
       startTime: "14:00",
-      endTime: "15:30"
+      endTime: "15:30",
+      memo: "예전 메모 예시"
     },
     {
-      scheduleId: 5,
+      scheduleId: "5",
       tourId: 1,
-      scheduleTitle: "남산타워 관광",
+      title: "남산타워 관광",
       content: "서울의 야경 감상",
       date: "2025-07-15",
       startTime: "18:00",
-      endTime: "20:00"
+      endTime: "20:00",
+      memo: "예전 메모 예시"
     }
   ],
   mapEntities: [
     {
       mapId: 1,
-      scheduleId: 1,
+      scheduleId: "1",
       tourId: 1,
       location: JSON.stringify({
         name: "경복궁",
@@ -188,7 +194,7 @@ const sampleData = {
     },
     {
       mapId: 3,
-      scheduleId: 3,
+      scheduleId: "3",
       tourId: 1,
       location: JSON.stringify({
         name: "북촌한옥마을",
@@ -202,7 +208,7 @@ const sampleData = {
     },
     {
       mapId: 4,
-      scheduleId: 4,
+      scheduleId: "4",
       tourId: 1,
       location: JSON.stringify({
         name: "명동교자 본점",
@@ -216,7 +222,7 @@ const sampleData = {
     },
     {
       mapId: 5,
-      scheduleId: 5,
+      scheduleId: "5",
       tourId: 1,
       location: JSON.stringify({
         name: "N서울타워",
@@ -418,9 +424,9 @@ export const useTravelStore = create<TravelState & TravelActions>()(
             const sameDateSchedules = state.schedules.filter(s => s.date === schedule.date);
             const nextOrder = sameDateSchedules.length;
             
-            const newSchedule: ScheduleType = {
+            const newSchedule:  ScheduleItemDto = {
               ...schedule,
-              scheduleId: Date.now(), // 임시 ID, 실제로는 서버에서 받아옴
+              scheduleId: Date.now().toString(), // 임시 ID, 실제로는 서버에서 받아옴
               order: nextOrder // 마지막 순서로 추가
             };
             
@@ -508,10 +514,10 @@ export const useTravelStore = create<TravelState & TravelActions>()(
         const nextOrder = sameDateSchedules.length;
 
         // Schedule 생성 - 선택된 날짜 기준
-        const newSchedule: ScheduleType = {
-          scheduleId: Date.now(),
+        const newSchedule:  ScheduleItemDto = {
+          scheduleId: Date.now().toString(),
           tourId: currentTour.tourId!,
-          scheduleTitle: location.name,
+          title: location.name,
           content: location.address,
           date: selectedDate, // 현재 선택된 날짜 사용
           startTime: defaultStartTime, // 시작시간만 저장
@@ -589,10 +595,10 @@ export const useTravelStore = create<TravelState & TravelActions>()(
         const nextOrder = sameDateSchedules.length;
 
         // Schedule 생성 - 선택된 날짜 기준
-        const newSchedule: ScheduleType = {
-          scheduleId: Date.now(),
+        const newSchedule:  ScheduleItemDto = {
+          scheduleId: Date.now().toString(),
           tourId: currentTour.tourId!,
-          scheduleTitle: `🚇 ${route.departure} → ${route.destination}`,
+          title: `🚇 ${route.departure} → ${route.destination}`,
           content: `${route.duration}분 소요, 환승 ${route.transfers}회`,
           date: selectedDate,
           startTime: route.departureTime,
@@ -613,6 +619,7 @@ export const useTravelStore = create<TravelState & TravelActions>()(
 
         const newTraffic: TrafficType = {
           trafficId: Date.now() + 1,
+          scheduleId: "",
           tourId: currentTour.tourId!,
           vehicle: JSON.stringify(vehicleData),
           spendTime: new Date().toISOString(),

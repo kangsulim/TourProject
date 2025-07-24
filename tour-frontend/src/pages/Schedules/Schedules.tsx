@@ -32,14 +32,14 @@ import {
   Today,
 } from '@mui/icons-material';
 import { useTravelStore, useTravelState, useTravelActions } from '../../store/travelStore';
-import { ScheduleType, MapEntityType, TrafficType, LocationData, VehicleData } from '../../types/travel';
+import { ScheduleItemDto, MapEntityType, TrafficType, LocationData, VehicleData } from '../../types/travel';
 
 interface ScheduleItemProps {
-  schedule: ScheduleType;
+  schedule: ScheduleItemDto;
   mapEntity?: MapEntityType;
   trafficData?: TrafficType;
-  onEditTime: (schedule: ScheduleType) => void;
-  onDelete: (scheduleId: number) => void;
+  onEditTime: (schedule: ScheduleItemDto) => void;
+  onDelete: (scheduleId: string) => void;
 }
 
 // 개별 일정 아이템 컴포넌트
@@ -113,7 +113,7 @@ const ScheduleItem: React.FC<ScheduleItemProps> = ({
           <Box flex={1}>
             <Box display="flex" justifyContent="space-between" alignItems="flex-start">
               <Typography variant="h6" component="h3" gutterBottom>
-                {schedule.scheduleTitle}
+                {schedule.title}
               </Typography>
               <IconButton size="small" onClick={handleMenuClick}>
                 <MoreVert />
@@ -191,9 +191,9 @@ const ScheduleItem: React.FC<ScheduleItemProps> = ({
 // 시간 편집 다이얼로그
 interface TimeEditDialogProps {
   open: boolean;
-  schedule: ScheduleType | null;
+  schedule: ScheduleItemDto | null;
   onClose: () => void;
-  onSave: (scheduleId: number, startTime: string, endTime: string, date: string) => void;
+  onSave: (scheduleId: string, startTime: string, endTime: string, date: string) => void;
 }
 
 const TimeEditDialog: React.FC<TimeEditDialogProps> = ({
@@ -267,12 +267,12 @@ const Schedules: React.FC = () => {
   const { schedules, mapEntities, trafficData, currentTour } = useTravelState();
   const { updateSchedule, removeSchedule, loadSampleData, saveTourToBackend } = useTravelActions();
   
-  const [editingSchedule, setEditingSchedule] = useState<ScheduleType | null>(null);
+  const [editingSchedule, setEditingSchedule] = useState<ScheduleItemDto | null>(null);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
 
   // 일정을 날짜별로 그룹핑
   const groupedSchedules = React.useMemo(() => {
-    const groups: { [date: string]: ScheduleType[] } = {};
+    const groups: { [date: string]: ScheduleItemDto[] } = {};
     schedules.forEach(schedule => {
       if (!groups[schedule.date]) {
         groups[schedule.date] = [];
@@ -289,12 +289,12 @@ const Schedules: React.FC = () => {
   }, [schedules]);
 
   // 시간 수정 핸들러
-  const handleEditTime = useCallback((schedule: ScheduleType) => {
+  const handleEditTime = useCallback((schedule: ScheduleItemDto) => {
     setEditingSchedule(schedule);
   }, []);
 
   const handleTimeUpdate = useCallback((
-    scheduleId: number,
+    scheduleId: string,
     startTime: string,
     endTime: string,
     date: string
@@ -305,7 +305,7 @@ const Schedules: React.FC = () => {
   }, [updateSchedule]);
 
   // 일정 삭제 핸들러
-  const handleDeleteSchedule = useCallback((scheduleId: number) => {
+  const handleDeleteSchedule = useCallback((scheduleId: string) => {
     removeSchedule(scheduleId);
     setSaveStatus('saved');
     setTimeout(() => setSaveStatus('idle'), 2000);

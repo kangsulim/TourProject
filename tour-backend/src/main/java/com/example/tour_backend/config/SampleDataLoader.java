@@ -105,16 +105,16 @@ public class SampleDataLoader implements CommandLineRunner {
     private TravelPlanDto createSeoulTravelPlan() {
         // 일정 데이터
         List<ScheduleItemDto> schedules = Arrays.asList(
-            createLocationSchedule("schedule_1", "2025-07-15", "09:00", "11:00", 
-                "경복궁 관람", "조선 왕조의 정궁 관람",
+            createLocationSchedule("schedule_1", 1L,"2025-07-15", "09:00", "11:00",
+                "경복궁 관람", "조선 왕조의 정궁 관람","꼭 가고 싶었던 곳!",
                 "경복궁", "서울특별시 종로구 사직로 161", 37.5796, 126.9770, 4.3),
             
-            createTrafficSchedule("schedule_2", "2025-07-15", "11:15", "11:20",
-                "지하철 3호선 이용", "경복궁역 → 안국역",
+            createTrafficSchedule("schedule_2", 2L,"2025-07-15", "11:15", "11:20",
+                "지하철 3호선 이용", "경복궁역 → 안국역","꼭 가고 싶었던 곳!",
                 "경복궁역", "안국역", 1500, "5분", 0),
             
-            createLocationSchedule("schedule_3", "2025-07-15", "11:30", "13:00",
-                "북촌한옥마을 산책", "전통 한옥의 아름다움 감상",
+            createLocationSchedule("schedule_3", 3L, "2025-07-15", "11:30", "13:00",
+                "북촌한옥마을 산책", "전통 한옥의 아름다움 감상", "꼭 가고 싶었던 곳!",
                 "북촌한옥마을", "서울특별시 종로구 계동길 37", 37.5816, 126.9839, 4.1)
         );
 
@@ -137,12 +137,12 @@ public class SampleDataLoader implements CommandLineRunner {
 
     private TravelPlanDto createBusanTravelPlan() {
         List<ScheduleItemDto> schedules = Arrays.asList(
-            createLocationSchedule("schedule_1", "2025-07-22", "10:00", "12:00",
-                "해운대 해수욕장", "부산 대표 해변 휴양",
+            createLocationSchedule("schedule_1", 4L, "2025-07-22", "10:00", "12:00",
+                "해운대 해수욕장", "부산 대표 해변 휴양", "꼭 가고 싶었던 곳!",
                 "해운대해수욕장", "부산광역시 해운대구 해운대해변로 264", 35.1587, 129.1603, 4.2),
             
-            createLocationSchedule("schedule_2", "2025-07-22", "14:00", "16:00",
-                "감천문화마을", "부산의 마추픽추",
+            createLocationSchedule("schedule_2", 5L,"2025-07-22", "14:00", "16:00",
+                "감천문화마을", "부산의 마추픽추", "꼭 가고 싶었던 곳!",
                 "감천문화마을", "부산광역시 사하구 감내2로 203", 35.0975, 129.0107, 4.1)
         );
 
@@ -159,8 +159,8 @@ public class SampleDataLoader implements CommandLineRunner {
         return new TravelPlanDto(schedules, weatherData, metadata);
     }
 
-    private ScheduleItemDto createLocationSchedule(String id, String date, String startTime, String endTime,
-                                                   String title, String content, String name, String address,
+    private ScheduleItemDto createLocationSchedule(String id, Long tourId, String date, String startTime, String endTime,
+                                                   String title, String content,String memo, String name, String address,
                                                    double lat, double lng, double rating) {
         LocationDataDto locationData = new LocationDataDto();
         locationData.setName(name);
@@ -171,19 +171,22 @@ public class SampleDataLoader implements CommandLineRunner {
 
         ScheduleItemDto schedule = new ScheduleItemDto();
         schedule.setScheduleId(id);
+        schedule.setTourId(tourId);
         schedule.setDate(date);
         schedule.setStartTime(startTime);
         schedule.setEndTime(endTime);
         schedule.setTitle(title);
         schedule.setContent(content);
-        schedule.setType("location");
+        schedule.setMemo(memo); // 메모 추가
+        //schedule.setType("location");
+        schedule.setTypes(Arrays.asList("location"));  // 여기 수정
         schedule.setLocationData(locationData);
 
         return schedule;
     }
 
-    private ScheduleItemDto createTrafficSchedule(String id, String date, String startTime, String endTime,
-                                                  String title, String content, String departure, String destination,
+    private ScheduleItemDto createTrafficSchedule(String id, Long tourId,  String date, String startTime, String endTime,
+                                                  String title, String content,String memo, String departure, String destination,
                                                   int price, String duration, int transfers) {
         TrafficDataDto trafficData = new TrafficDataDto();
         trafficData.setMode("TRANSIT");
@@ -195,12 +198,15 @@ public class SampleDataLoader implements CommandLineRunner {
 
         ScheduleItemDto schedule = new ScheduleItemDto();
         schedule.setScheduleId(id);
+        schedule.setTourId(tourId);
         schedule.setDate(date);
         schedule.setStartTime(startTime);
         schedule.setEndTime(endTime);
         schedule.setTitle(title);
         schedule.setContent(content);
-        schedule.setType("traffic");
+        schedule.setMemo(memo); // 메모 추가
+        //schedule.setType("traffic");
+        schedule.setTypes(Arrays.asList("traffic"));  // 여기 수정
         schedule.setTrafficData(trafficData);
 
         return schedule;
