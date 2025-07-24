@@ -1,6 +1,7 @@
 package com.example.tour_backend.controller;
 
 import com.example.tour_backend.domain.thread.Thread;
+import com.example.tour_backend.domain.thread.ThreadRepository;
 import com.example.tour_backend.dto.thread.ThreadDto;
 import com.example.tour_backend.dto.thread.ThreadUpdateRequestDto;
 import com.example.tour_backend.service.FileUploadService;
@@ -11,7 +12,9 @@ import org.springframework.web.bind.annotation.*;
 import com.example.tour_backend.service.ThreadService;
 import org.springframework.web.multipart.MultipartFile;
 
+
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/thread")
@@ -19,6 +22,7 @@ import java.util.List;
 public class ThreadController {
     private final ThreadService threadService;
     private final FileUploadService fileUploadService; // 파일 업로드
+    private final ThreadRepository threadRepository;
 
     @PostMapping //게시글 생성
     public ResponseEntity<ThreadDto> createThread(@RequestBody ThreadUpdateRequestDto requestDto) {
@@ -112,6 +116,15 @@ public class ThreadController {
         return ResponseEntity.ok(filePath); // 클라이언트에 저장 경로 응답
     }
 
+    // 나의 게시글 모두 보기
+    @GetMapping("/user/{userId}/threads")
+    public ResponseEntity<List<ThreadDto>> getThreadsByUserId(@PathVariable Long userId) {
+        List<Thread> threads = threadRepository.findByUser_UserId(userId);
+        List<ThreadDto> response = threads.stream()
+                .map(ThreadDto::from) // ✅ 기존에 있는 정적 메서드 사용!
+                .collect(Collectors.toList());
 
+        return ResponseEntity.ok(response);
+    }
 
 }

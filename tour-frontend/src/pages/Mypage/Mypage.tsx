@@ -1,4 +1,4 @@
-import { useEffect, useState, useContext } from 'react';
+import { useEffect, useState, useContext } from "react";
 import {
   Box,
   Paper,
@@ -8,18 +8,19 @@ import {
   Stack,
   Divider,
   CircularProgress,
-} from '@mui/material';
+} from "@mui/material";
 import {
   getUserProfile,
   updateUserProfile,
   getUserIdByUsername,
-} from '../../services/userApi';
-import { UserResponse, UserUpdateRequest } from '../../types/user';
-import { AuthContext } from '../../context/AuthContext';
-import { CenterFocusStrong } from '@mui/icons-material';
-import { getLikedThreads } from '../../services/userApi';
-import { Thread } from '../../types/thread';
-import { useNavigate } from 'react-router-dom';
+} from "../../services/userApi";
+import { UserResponse, UserUpdateRequest } from "../../types/user";
+import { AuthContext } from "../../context/AuthContext";
+import { CenterFocusStrong } from "@mui/icons-material";
+import { getLikedThreads } from "../../services/userApi";
+import { Thread } from "../../types/thread";
+import { useNavigate } from "react-router-dom";
+import { getUserThreads } from '../../services/threadApi';
 
 const Mypage = () => {
   const { token } = useContext(AuthContext);
@@ -27,7 +28,7 @@ const Mypage = () => {
   const [user, setUser] = useState<UserResponse | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   // 좋아요 누른 게시글 리스트 뽑아오기
   const [likedThreads, setLikedThreads] = useState<Thread[]>([]);
@@ -44,24 +45,37 @@ const Mypage = () => {
   }, [user]);
 
   const [form, setForm] = useState<UserUpdateRequest>({
-    username: '',
-    name: '',
-    email: '',
-    phone: '',
-    nickname: '',
-    password: '',
+    username: "",
+    name: "",
+    email: "",
+    phone: "",
+    nickname: "",
+    password: "",
   });
 
+  // 마이페이지 나의 게시글 열람
+  const [myThreads, setMyThreads] = useState<Thread[]>([]);
+  const [myLoading, setMyLoading] = useState(true);
+
+  useEffect(() => {
+    if (user) {
+      setMyLoading(true);
+      getUserThreads(user.userId)
+        .then(setMyThreads)
+        .catch(() => setMyThreads([]))
+        .finally(() => setMyLoading(false));
+    }
+  }, [user]);
 
   useEffect(() => {
     if (!token) return;
 
     try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
+      const payload = JSON.parse(atob(token.split(".")[1]));
       const username = payload.sub;
 
       if (!username) {
-        setError('유효하지 않은 사용자입니다.');
+        setError("유효하지 않은 사용자입니다.");
         setLoading(false);
         return;
       }
@@ -75,12 +89,12 @@ const Mypage = () => {
         })
         .catch((err) => {
           console.error(err);
-          setError('사용자 정보를 불러오는데 실패했습니다.');
+          setError("사용자 정보를 불러오는데 실패했습니다.");
           setLoading(false);
         });
     } catch (err) {
       console.error(err);
-      setError('토큰 파싱 오류');
+      setError("토큰 파싱 오류");
       setLoading(false);
     }
   }, [token]);
@@ -97,10 +111,10 @@ const Mypage = () => {
       const updatedUser = await updateUserProfile(user.userId, form);
       setUser(updatedUser);
       setIsEditing(false);
-      alert('정보가 성공적으로 수정되었습니다!');
+      alert("정보가 성공적으로 수정되었습니다!");
     } catch (err) {
       console.error(err);
-      alert('수정 실패');
+      alert("수정 실패");
     }
   };
 
@@ -108,10 +122,10 @@ const Mypage = () => {
     return (
       <Box
         sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          height: '50vh',
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "50vh",
         }}
       >
         <CircularProgress color="primary" />
@@ -121,7 +135,7 @@ const Mypage = () => {
 
   if (error) {
     return (
-      <Typography color="error" sx={{ textAlign: 'center', mt: 4 }}>
+      <Typography color="error" sx={{ textAlign: "center", mt: 4 }}>
         {error}
       </Typography>
     );
@@ -130,9 +144,9 @@ const Mypage = () => {
   return (
     <Box
       sx={{
-        maxWidth: '700px',
-        width: '100%',
-        mx: 'auto',
+        maxWidth: "700px",
+        width: "100%",
+        mx: "auto",
         mt: 5,
         p: 3,
       }}
@@ -142,7 +156,7 @@ const Mypage = () => {
         sx={{
           p: 4,
           borderRadius: 3,
-          bgcolor: 'white',
+          bgcolor: "white",
           boxShadow: 3,
         }}
       >
@@ -151,8 +165,7 @@ const Mypage = () => {
           fontWeight={700}
           color="primary"
           gutterBottom
-          sx={{ mb: 2 ,textAlign:'center'}}
-          
+          sx={{ mb: 2, textAlign: "center" }}
         >
           마이페이지
         </Typography>
@@ -220,7 +233,7 @@ const Mypage = () => {
                 type="email"
               />
               <TextField
-                label="폰번호"
+                label="연락처"
                 name="phone"
                 value={form.phone}
                 onChange={handleChange}
@@ -251,9 +264,47 @@ const Mypage = () => {
       </Paper>
       <Divider sx={{ my: 4 }} />
       <Typography variant="h5" fontWeight={600} gutterBottom>
+        나의 게시글
+      </Typography>
+      {myLoading ? (
+        <CircularProgress />
+      ) : myThreads.length === 0 ? (
+        <Typography color="text.secondary">
+          아직 작성한 게시글이 없습니다.
+        </Typography>
+      ) : (
+        <Stack spacing={2}>
+          {myThreads.map((thread) => (
+            <Paper
+              key={thread.threadId}
+              sx={{
+                p: 2,
+                borderRadius: 2,
+                boxShadow: 1,
+                cursor: "pointer",
+                transition: "box-shadow 0.2s",
+                "&:hover": { boxShadow: 6 },
+              }}
+              onClick={() => navigate(`/thread/${thread.threadId}`)}
+            >
+              <Typography variant="subtitle1" fontWeight={700}>
+                {thread.title}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {thread.author} | {thread.createDate?.substring(0, 10)}
+              </Typography>
+              <Typography variant="body2" sx={{ mt: 1, mb: 0.5 }}>
+                {thread.content?.slice(0, 60) || ""}
+              </Typography>
+            </Paper>
+          ))}
+        </Stack>
+      )}
+      <Divider sx={{ my: 4 }} />
+      <Typography variant="h5" fontWeight={600} gutterBottom>
         내가 좋아요 누른 게시글
       </Typography>
-      
+
       {likedLoading ? (
         <CircularProgress />
       ) : likedThreads.length === 0 ? (
@@ -262,34 +313,32 @@ const Mypage = () => {
         </Typography>
       ) : (
         <Stack spacing={2}>
-        {likedThreads.map((thread) => (
-          <Paper
-            key={thread.threadId}
-            sx={{
-              p: 2,
-              borderRadius: 2,
-              boxShadow: 1,
-              cursor: 'pointer',           // 마우스 올리면 손가락
-              transition: 'box-shadow 0.2s',
-              '&:hover': { boxShadow: 6 }, // 호버시 더 진하게
-            }}
-            onClick={() => navigate(`/thread/${thread.threadId}`)}  // 상세페이지로 이동!
-          >
-            <Typography variant="subtitle1" fontWeight={700}>
-              {thread.title}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {thread.author} | {thread.createDate?.substring(0, 10)}
-            </Typography>
-            <Typography variant="body2" sx={{ mt: 1, mb: 0.5 }}>
-              {thread.content?.slice(0, 60) || ''}
-            </Typography>
-          </Paper>
-        ))}
-      </Stack>
-      
-)}
-
+          {likedThreads.map((thread) => (
+            <Paper
+              key={thread.threadId}
+              sx={{
+                p: 2,
+                borderRadius: 2,
+                boxShadow: 1,
+                cursor: "pointer", // 마우스 올리면 손가락
+                transition: "box-shadow 0.2s",
+                "&:hover": { boxShadow: 6 }, // 호버시 더 진하게
+              }}
+              onClick={() => navigate(`/thread/${thread.threadId}`)} // 상세페이지로 이동!
+            >
+              <Typography variant="subtitle1" fontWeight={700}>
+                {thread.title}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {thread.author} | {thread.createDate?.substring(0, 10)}
+              </Typography>
+              <Typography variant="body2" sx={{ mt: 1, mb: 0.5 }}>
+                {thread.content?.slice(0, 60) || ""}
+              </Typography>
+            </Paper>
+          ))}
+        </Stack>
+      )}
     </Box>
   );
 };

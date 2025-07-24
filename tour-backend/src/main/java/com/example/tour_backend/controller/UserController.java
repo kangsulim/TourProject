@@ -1,5 +1,6 @@
 package com.example.tour_backend.controller;
 
+import com.example.tour_backend.domain.thread.ThreadRepository;
 import com.example.tour_backend.dto.thread.ThreadDto;
 import com.example.tour_backend.dto.user.*;
 import lombok.RequiredArgsConstructor;
@@ -7,7 +8,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.example.tour_backend.service.UserService;
 
+
+
+
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/users")
@@ -15,6 +20,7 @@ import java.util.List;
 @CrossOrigin(origins = {"http://localhost:3000", "http://localhost:5173", "http://localhost:5174"}, allowCredentials = "true")
 public class UserController {
     private final UserService userService;
+    private final ThreadRepository threadRepository;
 
     // 회원가입
     @PostMapping("/register")
@@ -98,4 +104,5 @@ public class UserController {
     public List<ThreadDto> getLikedThreads(@PathVariable Long userId) {
         return userService.getLikedThreadsByUser(userId);
     }
+
 }

@@ -40,7 +40,6 @@ public class Thread {
     private int heart = 0;
 
 
-
     private int commentCount = 0;
     private String area;
 

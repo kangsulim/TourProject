@@ -22,4 +22,7 @@ public interface ThreadRepository extends JpaRepository<Thread, Long> {
 
     // ✅ 추가: 사용자 ID로 게시글 조회 (알림 삭제를 위해)
     List<Thread> findByUser_UserId(Long userId); //??
+
+
+
 }

@@ -79,3 +79,7 @@ export const getThreadWithLikeStatus = async (threadId: number, userId: number):
   return response.data;
 };
 
+export const getUserThreads = async (userId: number): Promise<Thread[]> => {
+  const response = await api.get(`/thread/user/${userId}/threads`);
+  return response.data;
+};

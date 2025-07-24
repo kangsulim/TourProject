@@ -61,3 +61,9 @@ export async function getLikedThreads(userId: number): Promise<Thread[]> {
   const res = await api.get(`/users/${userId}/liked-threads`);
   return res.data;
 }
+
+export const getMyThreads = async (userId: number): Promise<Thread[]> => {
+  const response = await api.get(`/users/${userId}/threads`);
+  return response.data;
+};
+
