@@ -1134,6 +1134,7 @@ const Maps: React.FC = () => {
                     onClick={() => {handleAddRouteToSchedule(route);
                       handleClearSearchResults();
                       toggleRoutePanel();
+                      //이동
                     }}
                     sx={{ mt: 2 }}
                   >
