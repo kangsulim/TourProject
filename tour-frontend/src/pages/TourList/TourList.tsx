@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -20,7 +20,8 @@ import {
   MenuItem,
   ListItemIcon,
   ListItemText,
-} from '@mui/material';
+  Container,
+} from "@mui/material";
 import {
   Add as AddIcon,
   Edit as EditIcon,
@@ -29,27 +30,23 @@ import {
   MoreVert as MoreVertIcon,
   CalendarToday,
   People,
-  Launch as LaunchIcon
-} from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
-import { useTravelStore, useTravelActions } from '../../store/travelStore';
-import { TourType } from '../../types/travel';
-import { tourAPI } from '../../services/tourApi';
+  Launch as LaunchIcon,
+} from "@mui/icons-material";
+import { useNavigate } from "react-router-dom";
+import { useTravelStore, useTravelActions } from "../../store/travelStore";
+import { TourType } from "../../types/travel";
+import { tourAPI } from "../../services/tourApi";
 
 const TourList: React.FC = () => {
   const navigate = useNavigate();
-  const {
-    isLoading,
-    error,
-    currentTour
-  } = useTravelStore();
-  
+  const { isLoading, error, currentTour } = useTravelStore();
+
   const {
     loadUserToursFromBackend,
     loadTourFromBackend,
     createNewTourInBackend,
     setLoading,
-    setError
+    setError,
   } = useTravelActions();
 
   // 로컬 상태
@@ -57,27 +54,27 @@ const TourList: React.FC = () => {
   const [selectedTour, setSelectedTour] = useState<TourType | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  
+
   const [editForm, setEditForm] = useState({
-    title: '',
-    startDate: '',
-    endDate: '',
+    title: "",
+    startDate: "",
+    endDate: "",
     travelers: 2,
-    budget: 'medium' as 'low' | 'medium' | 'high' | 'luxury',
+    budget: "medium" as "low" | "medium" | "high" | "luxury",
   });
-   
+
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [menuTourId, setMenuTourId] = useState<number | null>(null);
 
   // 현재 사용자 정보
   const getCurrentUserId = () => {
-    const storedUser = localStorage.getItem('user');
+    const storedUser = localStorage.getItem("user");
     if (storedUser) {
       try {
         const userData = JSON.parse(storedUser);
         return userData.userId;
       } catch (error) {
-        console.error('사용자 정보 파싱 실패:', error);
+        console.error("사용자 정보 파싱 실패:", error);
       }
     }
     return null;
@@ -87,7 +84,7 @@ const TourList: React.FC = () => {
   const loadTours = async () => {
     const userId = getCurrentUserId();
     if (!userId) {
-      setError('로그인이 필요합니다.');
+      setError("로그인이 필요합니다.");
       return;
     }
 
@@ -95,7 +92,7 @@ const TourList: React.FC = () => {
       const userTours = await loadUserToursFromBackend(userId);
       setTours(userTours);
     } catch (error) {
-      console.error('여행 목록 로드 실패:', error);
+      console.error("여행 목록 로드 실패:", error);
     }
   };
 
@@ -108,15 +105,15 @@ const TourList: React.FC = () => {
   const handleCreateNewTour = async () => {
     const userId = getCurrentUserId();
     if (!userId) {
-      setError('로그인이 필요합니다.');
+      setError("로그인이 필요합니다.");
       return;
     }
 
     try {
       await createNewTourInBackend(userId);
-      navigate('/tours'); // 여행 계획 작성 페이지로 이동
+      navigate("/tours"); // 여행 계획 작성 페이지로 이동
     } catch (error) {
-      console.error('새 여행 생성 실패:', error);
+      console.error("새 여행 생성 실패:", error);
     }
   };
 
@@ -128,7 +125,7 @@ const TourList: React.FC = () => {
       startDate: tour.startDate,
       endDate: tour.endDate,
       travelers: tour.travelers,
-      budget: tour.budget
+      budget: tour.budget,
     });
     setIsEditDialogOpen(true);
     handleMenuClose();
@@ -140,20 +137,23 @@ const TourList: React.FC = () => {
 
     try {
       setLoading(true);
-      const updatedTour = await tourAPI.updateTour(selectedTour.tourId!, editForm);
-      
+      const updatedTour = await tourAPI.updateTour(
+        selectedTour.tourId!,
+        editForm
+      );
+
       // 목록에서 업데이트
-      setTours(prevTours => 
-        prevTours.map(tour => 
+      setTours((prevTours) =>
+        prevTours.map((tour) =>
           tour.tourId === selectedTour.tourId ? updatedTour : tour
         )
       );
-      
+
       setIsEditDialogOpen(false);
       setSelectedTour(null);
     } catch (error) {
-      console.error('여행 정보 수정 실패:', error);
-      setError('여행 정보 수정에 실패했습니다.');
+      console.error("여행 정보 수정 실패:", error);
+      setError("여행 정보 수정에 실패했습니다.");
     } finally {
       setLoading(false);
     }
@@ -172,17 +172,17 @@ const TourList: React.FC = () => {
     try {
       setLoading(true);
       await tourAPI.deleteTour(selectedTour.tourId!);
-      
+
       // 목록에서 제거
-      setTours(prevTours => 
-        prevTours.filter(tour => tour.tourId !== selectedTour.tourId)
+      setTours((prevTours) =>
+        prevTours.filter((tour) => tour.tourId !== selectedTour.tourId)
       );
-      
+
       setIsDeleteDialogOpen(false);
       setSelectedTour(null);
     } catch (error) {
-      console.error('여행 삭제 실패:', error);
-      setError('여행 삭제에 실패했습니다.');
+      console.error("여행 삭제 실패:", error);
+      setError("여행 삭제에 실패했습니다.");
     } finally {
       setLoading(false);
     }
@@ -192,21 +192,21 @@ const TourList: React.FC = () => {
   const handleCopyClick = async (tour: TourType) => {
     const userId = getCurrentUserId();
     if (!userId) {
-      setError('로그인이 필요합니다.');
+      setError("로그인이 필요합니다.");
       return;
     }
 
     try {
       setLoading(true);
       const copiedTour = await tourAPI.copyTour(tour.tourId!, userId);
-      
+
       // 목록에 추가
-      setTours(prevTours => [copiedTour, ...prevTours]);
-      
+      setTours((prevTours) => [copiedTour, ...prevTours]);
+
       handleMenuClose();
     } catch (error) {
-      console.error('여행 복사 실패:', error);
-      setError('여행 복사에 실패했습니다.');
+      console.error("여행 복사 실패:", error);
+      setError("여행 복사에 실패했습니다.");
     } finally {
       setLoading(false);
     }
@@ -217,17 +217,20 @@ const TourList: React.FC = () => {
     try {
       setLoading(true);
       await loadTourFromBackend(tour.tourId!);
-      navigate('/tours'); // 여행 계획 작성 페이지로 이동
+      navigate("/tours"); // 여행 계획 작성 페이지로 이동
     } catch (error) {
-      console.error('여행 로드 실패:', error);
-      setError('여행을 불러오는데 실패했습니다.');
+      console.error("여행 로드 실패:", error);
+      setError("여행을 불러오는데 실패했습니다.");
     } finally {
       setLoading(false);
     }
   };
 
   // 메뉴 핸들링
-  const handleMenuClick = (event: React.MouseEvent<HTMLElement>, tourId: number) => {
+  const handleMenuClick = (
+    event: React.MouseEvent<HTMLElement>,
+    tourId: number
+  ) => {
     setAnchorEl(event.currentTarget);
     setMenuTourId(tourId);
   };
@@ -240,9 +243,9 @@ const TourList: React.FC = () => {
   // 예산 타입을 한국어로 변환
   const getBudgetLabel = (budget: string) => {
     const budgetMap = {
-      low: '절약형',
-      medium: '일반형',
-      high: '럭셔리'
+      low: "절약형",
+      medium: "일반형",
+      high: "럭셔리",
     };
     return budgetMap[budget as keyof typeof budgetMap] || budget;
   };
@@ -258,10 +261,10 @@ const TourList: React.FC = () => {
 
   if (isLoading && tours.length === 0) {
     return (
-      <Box 
-        display="flex" 
-        justifyContent="center" 
-        alignItems="center" 
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
         minHeight="400px"
       >
         <CircularProgress size={60} />
@@ -270,25 +273,24 @@ const TourList: React.FC = () => {
   }
 
   return (
-    <Box sx={{ p: 3, maxWidth: 1200, mx: 'auto' }}>
+    <Box sx={{ p: 4, maxWidth: 1200, mx: "auto" }}>
       {/* 헤더 */}
-      <Box 
-        display="flex" 
-        justifyContent="space-between" 
-        alignItems="center" 
-        mb={3}
+      <Box
+        sx={{
+          background: "linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)",
+          color: "white",
+          p: 5,
+          borderRadius: 3,
+          mb: 4,
+          textAlign: "center",
+        }}
       >
-        <Typography variant="h4" component="h1" fontWeight="bold">
-          나의 여행 계획
+        <Typography variant="h3" fontWeight={700}>
+          💬 나의 여행 계획
         </Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={handleCreateNewTour}
-          size="large"
-        >
-          새 여행 만들기
-        </Button>
+        <Typography variant="h6" mt={1}>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;나만의 여행 계획을 관리해보세요&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        </Typography>
       </Box>
 
       {/* 에러 메시지 */}
@@ -300,10 +302,10 @@ const TourList: React.FC = () => {
 
       {/* 여행 목록 */}
       {tours.length === 0 ? (
-        <Box 
-          display="flex" 
-          flexDirection="column" 
-          alignItems="center" 
+        <Box
+          display="flex"
+          flexDirection="column"
+          alignItems="center"
           justifyContent="center"
           minHeight="400px"
           textAlign="center"
@@ -326,31 +328,31 @@ const TourList: React.FC = () => {
       ) : (
         <Grid container spacing={3}>
           {tours.map((tour) => (
-            <Grid item xs={12} sm={6} lg={4} key={tour.tourId} >
-              <Card 
-                sx={{ 
-                  height: '100%',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  position: 'relative',
-                  '&:hover': {
+            <Grid item xs={12} sm={6} lg={4} key={tour.tourId}>
+              <Card
+                sx={{
+                  height: "100%",
+                  display: "flex",
+                  flexDirection: "column",
+                  position: "relative",
+                  "&:hover": {
                     boxShadow: 4,
-                    transform: 'translateY(-2px)',
-                    transition: 'all 0.2s ease-in-out'
-                  }
+                    transform: "translateY(-2px)",
+                    transition: "all 0.2s ease-in-out",
+                  },
                 }}
               >
                 {/* 메뉴 버튼 */}
                 <IconButton
-                  sx={{ 
-                    position: 'absolute', 
-                    top: 8, 
-                    right: 8, 
+                  sx={{
+                    position: "absolute",
+                    top: 8,
+                    right: 8,
                     zIndex: 1,
-                    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-                    '&:hover': {
-                      backgroundColor: 'rgba(255, 255, 255, 0.9)'
-                    }
+                    backgroundColor: "rgba(255, 255, 255, 0.8)",
+                    "&:hover": {
+                      backgroundColor: "rgba(255, 255, 255, 0.9)",
+                    },
                   }}
                   onClick={(e) => handleMenuClick(e, tour.tourId!)}
                 >
@@ -359,16 +361,16 @@ const TourList: React.FC = () => {
 
                 <CardContent sx={{ flexGrow: 1, pb: 1 }}>
                   {/* 여행 제목 */}
-                  <Typography 
-                    variant="h6" 
-                    component="h2" 
+                  <Typography
+                    variant="h6"
+                    component="h2"
                     gutterBottom
-                    sx={{ 
-                      fontWeight: 'bold',
+                    sx={{
+                      fontWeight: "bold",
                       pr: 5, // 메뉴 버튼 공간 확보
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap'
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
                     }}
                   >
                     {tour.title}
@@ -377,12 +379,14 @@ const TourList: React.FC = () => {
                   {/* 여행 정보 */}
                   <Box sx={{ mb: 2 }}>
                     <Box display="flex" alignItems="center" mb={1}>
-                      <CalendarToday sx={{ fontSize: 16, mr: 1, color: 'text.secondary' }} />
+                      <CalendarToday
+                        sx={{ fontSize: 16, mr: 1, color: "text.secondary" }}
+                      />
                       <Typography variant="body2" color="text.secondary">
                         {tour.startDate} ~ {tour.endDate}
                       </Typography>
                     </Box>
-                    
+
                     <Box display="flex" alignItems="center" mb={1}>
                       <Typography variant="body2" color="text.secondary">
                         {getTravelDays(tour.startDate, tour.endDate)}일 여행
@@ -390,7 +394,9 @@ const TourList: React.FC = () => {
                     </Box>
 
                     <Box display="flex" alignItems="center" mb={1}>
-                      <People sx={{ fontSize: 16, mr: 1, color: 'text.secondary' }} />
+                      <People
+                        sx={{ fontSize: 16, mr: 1, color: "text.secondary" }}
+                      />
                       <Typography variant="body2" color="text.secondary">
                         {tour.travelers}명
                       </Typography>
@@ -402,20 +408,26 @@ const TourList: React.FC = () => {
                     label={getBudgetLabel(tour.budget)}
                     size="small"
                     color={
-                      tour.budget === 'high' ? 'error' :
-                      tour.budget === 'medium' ? 'primary' : 'success'
+                      tour.budget === "high"
+                        ? "error"
+                        : tour.budget === "medium"
+                        ? "primary"
+                        : "success"
                     }
                     sx={{ mb: 2 }}
                   />
 
                   {/* 생성/수정 날짜 */}
                   <Typography variant="caption" color="text.secondary">
-                    {tour.modifiedDate ? 
-                      `수정: ${new Date(tour.modifiedDate).toLocaleDateString()}` :
-                      tour.createDate ? 
-                        `생성: ${new Date(tour.createDate).toLocaleDateString()}` :
-                        ''
-                    }
+                    {tour.modifiedDate
+                      ? `수정: ${new Date(
+                          tour.modifiedDate
+                        ).toLocaleDateString()}`
+                      : tour.createDate
+                      ? `생성: ${new Date(
+                          tour.createDate
+                        ).toLocaleDateString()}`
+                      : ""}
                   </Typography>
                 </CardContent>
 
@@ -441,43 +453,49 @@ const TourList: React.FC = () => {
         open={Boolean(anchorEl)}
         onClose={handleMenuClose}
         PaperProps={{
-          sx: { minWidth: 160 }
+          sx: { minWidth: 160 },
         }}
       >
-        <MenuItem onClick={() => {
-          const tour = tours.find(t => t.tourId === menuTourId);
-          if (tour) handleEditClick(tour);
-        }}>
+        <MenuItem
+          onClick={() => {
+            const tour = tours.find((t) => t.tourId === menuTourId);
+            if (tour) handleEditClick(tour);
+          }}
+        >
           <ListItemIcon>
             <EditIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText>수정</ListItemText>
         </MenuItem>
-        
-        <MenuItem onClick={() => {
-          const tour = tours.find(t => t.tourId === menuTourId);
-          if (tour) handleCopyClick(tour);
-        }}>
+
+        <MenuItem
+          onClick={() => {
+            const tour = tours.find((t) => t.tourId === menuTourId);
+            if (tour) handleCopyClick(tour);
+          }}
+        >
           <ListItemIcon>
             <CopyIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText>복사</ListItemText>
         </MenuItem>
-        
-        <MenuItem onClick={() => {
-          const tour = tours.find(t => t.tourId === menuTourId);
-          if (tour) handleDeleteClick(tour);
-        }}>
+
+        <MenuItem
+          onClick={() => {
+            const tour = tours.find((t) => t.tourId === menuTourId);
+            if (tour) handleDeleteClick(tour);
+          }}
+        >
           <ListItemIcon>
             <DeleteIcon fontSize="small" color="error" />
           </ListItemIcon>
-          <ListItemText sx={{ color: 'error.main' }}>삭제</ListItemText>
+          <ListItemText sx={{ color: "error.main" }}>삭제</ListItemText>
         </MenuItem>
       </Menu>
 
       {/* 편집 다이얼로그 */}
-      <Dialog 
-        open={isEditDialogOpen} 
+      <Dialog
+        open={isEditDialogOpen}
         onClose={() => setIsEditDialogOpen(false)}
         maxWidth="sm"
         fullWidth
@@ -489,46 +507,62 @@ const TourList: React.FC = () => {
             fullWidth
             margin="normal"
             value={editForm.title}
-            onChange={(e) => setEditForm(prev => ({ ...prev, title: e.target.value }))}
+            onChange={(e) =>
+              setEditForm((prev) => ({ ...prev, title: e.target.value }))
+            }
           />
-          
+
           <TextField
             label="시작 날짜"
             type="date"
             fullWidth
             margin="normal"
             value={editForm.startDate}
-            onChange={(e) => setEditForm(prev => ({ ...prev, startDate: e.target.value }))}
+            onChange={(e) =>
+              setEditForm((prev) => ({ ...prev, startDate: e.target.value }))
+            }
             InputLabelProps={{ shrink: true }}
           />
-          
+
           <TextField
             label="종료 날짜"
             type="date"
             fullWidth
             margin="normal"
             value={editForm.endDate}
-            onChange={(e) => setEditForm(prev => ({ ...prev, endDate: e.target.value }))}
+            onChange={(e) =>
+              setEditForm((prev) => ({ ...prev, endDate: e.target.value }))
+            }
             InputLabelProps={{ shrink: true }}
           />
-          
+
           <TextField
             label="여행자 수"
             type="number"
             fullWidth
             margin="normal"
             value={editForm.travelers}
-            onChange={(e) => setEditForm(prev => ({ ...prev, travelers: parseInt(e.target.value) || 1 }))}
+            onChange={(e) =>
+              setEditForm((prev) => ({
+                ...prev,
+                travelers: parseInt(e.target.value) || 1,
+              }))
+            }
             inputProps={{ min: 1, max: 20 }}
           />
-          
+
           <TextField
             label="예산 타입"
             select
             fullWidth
             margin="normal"
             value={editForm.budget}
-            onChange={(e) => setEditForm(prev => ({ ...prev, budget: e.target.value as any }))}
+            onChange={(e) =>
+              setEditForm((prev) => ({
+                ...prev,
+                budget: e.target.value as any,
+              }))
+            }
           >
             <MenuItem value="low">절약형</MenuItem>
             <MenuItem value="medium">일반형</MenuItem>
@@ -536,10 +570,8 @@ const TourList: React.FC = () => {
           </TextField>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setIsEditDialogOpen(false)}>
-            취소
-          </Button>
-          <Button 
+          <Button onClick={() => setIsEditDialogOpen(false)}>취소</Button>
+          <Button
             onClick={handleEditSave}
             variant="contained"
             disabled={!editForm.title.trim()}
@@ -564,10 +596,8 @@ const TourList: React.FC = () => {
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setIsDeleteDialogOpen(false)}>
-            취소
-          </Button>
-          <Button 
+          <Button onClick={() => setIsDeleteDialogOpen(false)}>취소</Button>
+          <Button
             onClick={handleDeleteConfirm}
             variant="contained"
             color="error"
@@ -581,16 +611,16 @@ const TourList: React.FC = () => {
       {isLoading && (
         <Box
           sx={{
-            position: 'fixed',
+            position: "fixed",
             top: 0,
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.3)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 9999
+            backgroundColor: "rgba(0, 0, 0, 0.3)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 9999,
           }}
         >
           <CircularProgress size={60} />
