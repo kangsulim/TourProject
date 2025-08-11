@@ -60,8 +60,3 @@
 #### 브랜치 전략
 -   **`main`**: 메인 배포 브랜치
 -   **`dev`**: 개발 중인 기능 통합 브랜치
-
-## 🚀 API 문서
-백엔드 서버가 실행 중일 때 Swagger UI를 통해 API 문서를 확인할 수 있어요!
--   **Swagger UI**: http://localhost:8080/swagger-ui/index.html
--   **API Docs**: http://localhost:8080/v3/api-docs
